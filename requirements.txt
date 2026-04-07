@@ -1,0 +1,11 @@
+streamlit>=1.35.0
+crewai>=0.80.0
+crewai-tools>=0.14.0
+langchain-google-genai>=2.0.0
+langchain-openai>=0.2.0
+langchain-groq>=0.2.0
+python-dotenv>=1.0.0
+pandas>=2.0.0
+matplotlib>=3.8.0
+plotly>=5.20.0
+sqlalchemy>=2.0.0

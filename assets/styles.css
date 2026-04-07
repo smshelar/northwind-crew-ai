@@ -1,0 +1,159 @@
+/* ── Base ──────────────────────────────────────────── */
+* {
+    box-sizing: border-box;
+}
+
+/* App background */
+.stApp {
+    background-color: #0f1117;
+    color: #ffffff;
+}
+
+/* ── Typography ─────────────────────────────────────── */
+h1, h2, h3 {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+}
+
+p, label, span, div {
+    color: #ffffff;
+}
+
+/* ── Sidebar ─────────────────────────────────────────── */
+section[data-testid="stSidebar"] {
+    background-color: #161b27 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    padding-top: 1.5rem;
+}
+
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] .stCaption {
+    color: #ffffff !important;
+}
+
+/* ── Sidebar buttons (example questions) ────────────── */
+section[data-testid="stSidebar"] div.stButton > button {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: #ffffff !important;
+    border: 0.5px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 10px !important;
+    padding: 0.55em 1em !important;
+    font-size: 0.82rem !important;
+    font-weight: 400 !important;
+    text-align: left !important;
+    width: 100% !important;
+    transition: background 0.15s ease;
+}
+
+section[data-testid="stSidebar"] div.stButton > button:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ── Main Ask button ─────────────────────────────────── */
+div.stButton > button[kind="primary"] {
+    background-color: #4CAF50 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 0.55em 1.6em !important;
+    font-weight: 500 !important;
+    font-size: 0.95rem !important;
+    transition: background 0.15s ease;
+}
+
+div.stButton > button[kind="primary"]:hover {
+    background-color: #45a049 !important;
+}
+
+//* ── Text input ──────────────────────────────────────── */
+.stTextInput > div > div > input {
+    background-color: #ffffff !important;
+    border: 0.5px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 10px !important;
+    color: #000000 !important;
+    padding: 0.65em 1em !important;
+    font-size: 0.95rem !important;
+}
+
+.stTextInput > div > div > input::placeholder {
+    color: #6b7280 !important;
+}
+
+.stTextInput > div > div > input:focus {
+    border-color: #4CAF50 !important;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
+}
+
+/* ── Expanders ───────────────────────────────────────── */
+details[data-testid="stExpander"] {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    border: none !important;
+    border-radius: 10px !important;
+}
+
+details[data-testid="stExpander"] summary {
+    color: #ffffff !important;
+    font-size: 0.88rem !important;
+    padding: 0.75rem 1rem !important;
+}
+
+/* ── Code blocks (SQL) ───────────────────────────────── */
+.stCodeBlock, pre, code {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    border: none !important;
+    border-radius: 10px !important;
+    color: #82cfff !important;
+    font-size: 0.85rem !important;
+}
+
+/* ── Info / Success / Warning boxes ─────────────────── */
+div[data-testid="stInfo"] {
+    background-color: rgba(79, 126, 248, 0.08) !important;
+    border: 0.5px solid rgba(79, 126, 248, 0.25) !important;
+    border-radius: 10px !important;
+    color: #ffffff !important;
+}
+
+div[data-testid="stSuccess"] {
+    background-color: rgba(76, 175, 80, 0.08) !important;
+    border: 0.5px solid rgba(76, 175, 80, 0.25) !important;
+    border-radius: 10px !important;
+    color: #ffffff !important;
+}
+
+div[data-testid="stWarning"] {
+    background-color: rgba(240, 159, 39, 0.08) !important;
+    border: 0.5px solid rgba(240, 159, 39, 0.25) !important;
+    border-radius: 10px !important;
+    color: #ffffff !important;
+}
+
+/* ── Dataframe / Table ───────────────────────────────── */
+div[data-testid="stDataFrame"] {
+    border: none !important;
+    border-radius: 10px !important;
+    overflow: hidden;
+}
+
+/* ── Spinner ─────────────────────────────────────────── */
+div[data-testid="stSpinner"] p {
+    color: #ffffff !important;
+    font-size: 0.9rem;
+}
+
+/* ── Dividers ────────────────────────────────────────── */
+hr {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ── Subheader alignment ─────────────────────────────── */
+h2[data-testid="stHeading"], h3[data-testid="stHeading"] {
+    margin-top: 0.5rem !important;
+    padding-bottom: 0.25rem !important;
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
+}

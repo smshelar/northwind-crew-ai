@@ -1,0 +1,25 @@
+# API Keys — NEVER commit these
+.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Database (auto-downloaded)
+data/northwind.db
+
+# Test output
+test_chart.png
+
+# Mac
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
