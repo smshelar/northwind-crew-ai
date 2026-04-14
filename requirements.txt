@@ -10,4 +10,4 @@ groq==0.5.0
 cohere==5.5.8
 requests==2.31.0
 sqlalchemy==2.0.30
-litellm==1.61.20
+
