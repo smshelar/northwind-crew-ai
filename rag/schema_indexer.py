@@ -22,11 +22,11 @@ import tempfile
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "northwind.db")
 CHROMA_PATH = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 
-def get_chroma_client():
-    """
-    Use in-memory/temp DB for Streamlit.
-    Use persistent DB locally.
-    """
+# def get_chroma_client():
+#     """
+#     Use in-memory/temp DB for Streamlit.
+#     Use persistent DB locally.
+#     """
     # try:
     #     import streamlit as st
     #     # If running in Streamlit Cloud
@@ -43,17 +43,17 @@ def get_chroma_client():
     # # Local fallback
     # return chromadb.PersistentClient(path=CHROMA_PATH)
 
-    def get_chroma_client():
-        import chromadb
-        from chromadb.config import Settings
+def get_chroma_client():
+    import chromadb
+    from chromadb.config import Settings
 
-        # Always use in-memory for Streamlit (safe for both)
-        return chromadb.Client(
-            Settings(
-                persist_directory=None,
-                anonymized_telemetry=False
-            )
+    # Always return a valid client (no try/except confusion)
+    return chromadb.Client(
+        Settings(
+            persist_directory=None,
+            anonymized_telemetry=False
         )
+    )
 
 
 def get_embedding_function():
