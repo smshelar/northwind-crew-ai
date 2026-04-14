@@ -15,31 +15,32 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import chromadb
 from chromadb.utils import embedding_functions
 
+
+from chromadb.config import Settings
+import tempfile
+
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "northwind.db")
 CHROMA_PATH = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 
 
+
 def get_chroma_client():
     """
-    Use persistent storage locally,
-    but fallback to in-memory for Streamlit Cloud.
+    Use temp/in-memory DB for Streamlit,
+    persistent for local.
     """
     try:
         import streamlit as st
-
-        # If running on Streamlit Cloud → use in-memory
         if hasattr(st, "runtime"):
-            from chromadb.config import Settings
             return chromadb.Client(
                 Settings(
-                    persist_directory=None,
+                    persist_directory=tempfile.mkdtemp(),
                     anonymized_telemetry=False
                 )
             )
     except:
         pass
 
-    # Local fallback → persistent storage
     return chromadb.PersistentClient(path=CHROMA_PATH)
 
 def get_embedding_function():
