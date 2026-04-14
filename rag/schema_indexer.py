@@ -46,11 +46,11 @@ CHROMA_PATH = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 def get_chroma_client():
     import chromadb
     from chromadb.config import Settings
+    import tempfile
 
-    # Always return a valid client (no try/except confusion)
     return chromadb.Client(
         Settings(
-            persist_directory=None,
+            persist_directory=tempfile.mkdtemp(),  # ✅ valid path
             anonymized_telemetry=False
         )
     )
