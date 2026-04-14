@@ -50,7 +50,7 @@ def create_sql_writer(schema_context: str = "") -> Agent:
             "GROUP BY p.ProductName ORDER BY TotalSales DESC LIMIT 5;"
         ),
         #llm=get_llm(temperature=0.1),
-        llm=get_llm(),
+        llm=get_llm()["groq/llama-3.1-8b-instant"],
         verbose=True,
         allow_delegation=False,
     )
