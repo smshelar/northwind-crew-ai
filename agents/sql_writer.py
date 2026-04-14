@@ -52,5 +52,5 @@ def create_sql_writer(schema_context: str = "") -> Agent:
         #llm=get_llm(temperature=0.1),
         llm=get_llm()["model"],
         verbose=True,
-        allow_delegation=False,
+        #allow_delegation=False,
     )
