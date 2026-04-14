@@ -27,21 +27,33 @@ def get_chroma_client():
     Use in-memory/temp DB for Streamlit.
     Use persistent DB locally.
     """
-    try:
-        import streamlit as st
-        # If running in Streamlit Cloud
-        if hasattr(st, "runtime"):
-            return chromadb.Client(
-                Settings(
-                    persist_directory=tempfile.mkdtemp(),
-                    anonymized_telemetry=False
-                )
-            )
-    except:
-        pass
+    # try:
+    #     import streamlit as st
+    #     # If running in Streamlit Cloud
+    #     if hasattr(st, "runtime"):
+    #         return chromadb.Client(
+    #             Settings(
+    #                 persist_directory=tempfile.mkdtemp(),
+    #                 anonymized_telemetry=False
+    #             )
+    #         )
+    # except:
+    #     pass
 
-    # Local fallback
-    return chromadb.PersistentClient(path=CHROMA_PATH)
+    # # Local fallback
+    # return chromadb.PersistentClient(path=CHROMA_PATH)
+
+    def get_chroma_client():
+        import chromadb
+        from chromadb.config import Settings
+
+        # Always use in-memory for Streamlit (safe for both)
+        return chromadb.Client(
+            Settings(
+                persist_directory=None,
+                anonymized_telemetry=False
+            )
+        )
 
 
 def get_embedding_function():
@@ -128,16 +140,27 @@ def index_schema():
     embed_fn = get_embedding_function()
 
     # Delete existing collection if it exists (fresh rebuild)
-    try:
-        client.delete_collection("schema")
-        print("   Deleted existing schema collection")
-    except Exception:
-        pass
+    # try:
+    #     client.delete_collection("schema")
+    #     print("   Deleted existing schema collection")
+    # except Exception:
+    #     pass
 
-    # Create collection safely
-    try:
+    # # Create collection safely
+    # try:
+    #     collection = client.get_collection(name="schema")
+    # except:
+    #     collection = client.create_collection(
+    #         name="schema",
+    #         embedding_function=embed_fn,
+    #         metadata={"description": "Database table schemas"}
+    #     )
+
+    collections = [c.name for c in client.list_collections()]
+
+    if "schema" in collections:
         collection = client.get_collection(name="schema")
-    except:
+    else:
         collection = client.create_collection(
             name="schema",
             embedding_function=embed_fn,
