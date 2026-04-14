@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-04-13T16:33:43.649255",
+  "questions": [
+    "What were the top 5 products by total sales?",
+    "Which customers have the highest order frequency?"
+  ],
+  "models": [
+    "Groq Llama 3.1 8b",
+    "Mistral 7b",
+    "Cohere Command R"
+  ],
+  "results": [
+    {
+      "model": "Groq Llama 3.1 8b",
+      "question": "What were the top 5 products by total sales?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "Error code: 401 - {'error': {'message': 'Incorrect API key provided: GxCBXXYE***********************"
+    },
+    {
+      "model": "Mistral 7b",
+      "question": "What were the top 5 products by total sales?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "name 're' is not defined"
+    },
+    {
+      "model": "Cohere Command R",
+      "question": "What were the top 5 products by total sales?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "Error code: 401 - {'error': {'message': 'Incorrect API key provided: GxCBXXYE***********************"
+    },
+    {
+      "model": "Groq Llama 3.1 8b",
+      "question": "Which customers have the highest order frequency?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "name 're' is not defined"
+    },
+    {
+      "model": "Mistral 7b",
+      "question": "Which customers have the highest order frequency?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "name 're' is not defined"
+    },
+    {
+      "model": "Cohere Command R",
+      "question": "Which customers have the highest order frequency?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "Error code: 401 - {'error': {'message': 'Incorrect API key provided: GxCBXXYE***********************"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-04-14T12:47:03.746760",
+  "questions": [
+    "What were the top 5 products by total sales?",
+    "Which customers have the highest order frequency?"
+  ],
+  "models": [
+    "Gemini 2.0 Flash Lite",
+    "Groq Llama 3.1 8b",
+    "Mistral 7b",
+    "Cohere Command A"
+  ],
+  "results": [
+    {
+      "model": "Gemini 2.0 Flash Lite",
+      "question": "What were the top 5 products by total sales?",
+      "sql": "SELECT p.ProductName, SUM(od.Quantity * od.UnitPrice * (1 - od.Discount)) AS TotalSales\nFROM Products p\nJOIN [Order Details] od ON p.ProductID = od.ProductID\nGROUP BY p.ProductName\nORDER BY TotalSales DESC\nLIMIT 5;",
+      "success": true,
+      "rows": 5,
+      "time_ms": 5532.058238983154,
+      "hallucinated_tables": [],
+      "quality_score": 100,
+      "error": ""
+    },
+    {
+      "model": "Groq Llama 3.1 8b",
+      "question": "What were the top 5 products by total sales?",
+      "sql": "SELECT p.ProductName, SUM(od.Quantity * od.UnitPrice * (1 - od.Discount)) AS TotalSales\nFROM [Order Details] od\nJOIN Products p ON od.ProductID = p.ProductID\nGROUP BY p.ProductName\nORDER BY TotalSales DESC\nLIMIT 5;",
+      "success": true,
+      "rows": 5,
+      "time_ms": 380.98692893981934,
+      "hallucinated_tables": [],
+      "quality_score": 100,
+      "error": ""
+    },
+    {
+      "model": "Mistral 7b",
+      "question": "What were the top 5 products by total sales?",
+      "sql": "SELECT p.ProductName, SUM(od.Quantity * od.UnitPrice * (1 - od.Discount)) AS TotalSales\nFROM [Order Details] od\nJOIN Products p ON od.ProductID = p.ProductID\nGROUP BY p.ProductID, p.ProductName\nORDER BY TotalSales DESC\nLIMIT 5;",
+      "success": true,
+      "rows": 5,
+      "time_ms": 850.6190776824951,
+      "hallucinated_tables": [],
+      "quality_score": 100,
+      "error": ""
+    },
+    {
+      "model": "Cohere Command A",
+      "question": "What were the top 5 products by total sales?",
+      "sql": "SELECT p.ProductName, SUM(od.Quantity * od.UnitPrice * (1 - od.Discount)) AS TotalSales\nFROM Products p\nJOIN [Order Details] od ON p.ProductID = od.ProductID\nGROUP BY p.ProductName\nORDER BY TotalSales DESC\nLIMIT 5;",
+      "success": true,
+      "rows": 5,
+      "time_ms": 11711.642742156982,
+      "hallucinated_tables": [],
+      "quality_score": 100,
+      "error": ""
+    },
+    {
+      "model": "Gemini 2.0 Flash Lite",
+      "question": "Which customers have the highest order frequency?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please "
+    },
+    {
+      "model": "Groq Llama 3.1 8b",
+      "question": "Which customers have the highest order frequency?",
+      "sql": "SELECT c.CustomerID, c.CompanyName, COUNT(o.OrderID) AS OrderFrequency\nFROM Customers c\nJOIN Orders o ON c.CustomerID = o.CustomerID\nGROUP BY c.CustomerID, c.CompanyName\nORDER BY OrderFrequency DESC LIMIT 1;",
+      "success": true,
+      "rows": 1,
+      "time_ms": 372.07603454589844,
+      "hallucinated_tables": [],
+      "quality_score": 100,
+      "error": ""
+    },
+    {
+      "model": "Mistral 7b",
+      "question": "Which customers have the highest order frequency?",
+      "sql": "SELECT c.CustomerID, c.CompanyName, COUNT(o.OrderID) AS OrderFrequency\nFROM Customers c\nJOIN Orders o ON c.CustomerID = o.CustomerID\nGROUP BY c.CustomerID, c.CompanyName\nORDER BY OrderFrequency DESC;",
+      "success": true,
+      "rows": 93,
+      "time_ms": 1241.199016571045,
+      "hallucinated_tables": [],
+      "quality_score": 100,
+      "error": ""
+    },
+    {
+      "model": "Cohere Command A",
+      "question": "Which customers have the highest order frequency?",
+      "sql": "SELECT c.CompanyName, COUNT(o.OrderID) AS OrderFrequency\nFROM Customers c\nJOIN Orders o ON c.CustomerID = o.CustomerID\nGROUP BY c.CompanyName\nORDER BY OrderFrequency DESC\nLIMIT 5;",
+      "success": true,
+      "rows": 5,
+      "time_ms": 7316.704034805298,
+      "hallucinated_tables": [],
+      "quality_score": 100,
+      "error": ""
+    }
+  ]
+}
