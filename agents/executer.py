@@ -22,7 +22,7 @@ def create_executer() -> Agent:
             "If you return anything other than a JSON array, you have failed."
         ),
         tools=[ExecuteSQLTool()],
-        llm=get_llm(temperature=0.0),
+        llm=get_llm(),
         verbose=True,
         allow_delegation=False,
         max_iter=3,  # forces it to stop after 3 attempts
