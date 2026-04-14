@@ -449,7 +449,7 @@ Full results are saved automatically to `benchmark_TIMESTAMP.json`.
 
 ---
 
-## 📄Link for app
+## 📄 Link for app
 
 - [my app](https://northwind-crew-ai-agentic-rag.streamlit.app/)
 
