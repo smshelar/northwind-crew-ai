@@ -20,8 +20,27 @@ CHROMA_PATH = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 
 
 def get_chroma_client():
-    return chromadb.PersistentClient(path=CHROMA_PATH)
+    """
+    Use persistent storage locally,
+    but fallback to in-memory for Streamlit Cloud.
+    """
+    try:
+        import streamlit as st
 
+        # If running on Streamlit Cloud → use in-memory
+        if hasattr(st, "runtime"):
+            from chromadb.config import Settings
+            return chromadb.Client(
+                Settings(
+                    persist_directory=None,
+                    anonymized_telemetry=False
+                )
+            )
+    except:
+        pass
+
+    # Local fallback → persistent storage
+    return chromadb.PersistentClient(path=CHROMA_PATH)
 
 def get_embedding_function():
     return embedding_functions.DefaultEmbeddingFunction()
@@ -113,11 +132,15 @@ def index_schema():
     except Exception:
         pass
 
-    collection = client.create_collection(
-        name="schema",
-        embedding_function=embed_fn,
-        metadata={"description": "Database table schemas"}
-    )
+    # Create collection safely
+    try:
+        collection = client.get_collection(name="schema")
+    except:
+        collection = client.create_collection(
+            name="schema",
+            embedding_function=embed_fn,
+            metadata={"description": "Database table schemas"}
+        )
 
     print("📝 Indexing tables...")
     documents = []

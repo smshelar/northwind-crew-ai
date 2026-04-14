@@ -10,6 +10,7 @@ SQL evaluation and hallucination detection.
 import json
 import re
 import sqlite3
+import streamlit as st
 import os
 import time
 import pandas as pd
@@ -171,7 +172,9 @@ class NorthwindCrew:
         """Auto-build RAG index on first run if not already built."""
         if not is_schema_indexed():
             print("🔧 First run — building RAG schema index...")
-            index_schema()
+            if "schema_indexed" not in st.session_state:
+                index_schema()
+                st.session_state["schema_indexed"] = True
             print("✅ Schema index ready")
 
     def run(self, user_question: str) -> dict:
