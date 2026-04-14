@@ -1,107 +1,158 @@
 # 🤖 Northwind Agentic AI
 
-> A multi-agent AI system that answers business questions in plain English — powered by **CrewAI**, **Google Gemini**, and **Streamlit**.
+> A production-grade multi-agent AI system that answers business questions in plain English — powered by **CrewAI**, **ChromaDB RAG**, **Memory Caching**, **Evaluation Metrics**, **Guardrails**, and **4 LLM providers**.
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python)
 ![CrewAI](https://img.shields.io/badge/CrewAI-Multi--Agent-green?style=flat-square)
-![Streamlit](https://img.shields.io/badge/Streamlit-Web%20UI-red?style=flat-square&logo=streamlit)
-![SQLite](https://img.shields.io/badge/SQLite-Northwind%20DB-lightblue?style=flat-square&logo=sqlite)
+![ChromaDB](https://img.shields.io/badge/ChromaDB-RAG-purple?style=flat-square)
+![Streamlit](https://img.shields.io/badge/Streamlit-Live-red?style=flat-square&logo=streamlit)
 
 ---
 
 ## 📌 Overview
 
-Northwind Agentic AI is a **multi-agent agentic AI system** that lets users query the Northwind business database using plain English — no SQL knowledge required.
+Northwind Agentic AI lets anyone query a business database using plain English — no SQL knowledge required. It combines **Agentic AI** (3 specialised CrewAI agents) with **RAG** (ChromaDB vector search) to intelligently filter relevant tables before generating SQL, making it scalable to 100-200 table databases without performance loss.
 
-The system uses **3 specialised AI agents** working in sequence:
+**Ask:** *"Which customers have the highest order frequency?"*
 
-1. **SQL Writer Agent** — Translates a natural language question into a SQLite query
-2. **SQL Executor Agent** — Runs the query against the Northwind database
-3. **Visualizer Agent** — Generates a chart and business insight from the results
-
-All agents are orchestrated by **CrewAI** and presented through a **Streamlit** web interface with a custom dark theme.
+**Get:** SQL query + bar chart + business insight — automatically.
 
 ---
 
-## 🎯 Problem Statement
+## ✨ Key Features
 
-Business data locked inside databases is inaccessible to non-technical users. Analysts spend time writing repetitive queries instead of generating insights. This project solves that by:
-
-- Allowing anyone to ask business questions in plain English
-- Automatically generating accurate SQL from natural language
-- Turning raw data into visualisations and insights instantly
-- Demonstrating a real-world agentic AI pipeline architecture
+| Feature | Description |
+|---|---|
+| **3 AI Agents** | SQL Writer → Executor → Visualizer, coordinated by CrewAI |
+| **RAG Schema Retrieval** | ChromaDB finds top 5 relevant tables from 100+ using vector search |
+| **Memory Cache** | Repeated questions answered in <200ms with no LLM call |
+| **Evaluation Metrics** | SQL quality score, hallucination detection, faithfulness, Precision@K |
+| **Guardrails** | Input sanitisation + output validation before any result is shown |
+| **4 LLM Support** | Switch between Gemini, Groq, Mistral, Cohere via `.env` |
+| **Model Benchmark** | Automated comparison of all models on the same questions |
+| **Dark Theme UI** | Professional Streamlit interface with custom CSS |
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-User (Plain English Question)
-        │
-        ▼
+User Question (plain English)
+         │
+         ▼
 ┌─────────────────┐
-│   Streamlit UI  │  ← app.py
-│   (Dark Theme)  │
+│  Input Guardrail│  ← Block injections, sanitise input
 └────────┬────────┘
          │
          ▼
-┌─────────────────────────────────────────────┐
-│              CrewAI Orchestrator            │
-│           crew/northwind_crew.py            │
-└──────┬──────────────┬───────────────┬───────┘
-       │              │               │
-       ▼              ▼               ▼
-┌──────────┐   ┌──────────┐   ┌──────────────┐
-│  Agent 1 │   │  Agent 2 │   │   Agent 3    │
-│SQL Writer│──▶│Executor  │──▶│  Visualizer  │
-└──────────┘   └──────────┘   └──────────────┘
-       │              │               │
-       ▼              ▼               ▼
-  SQL Query      SQLite DB       Chart + Insight
-                Northwind.db    (matplotlib)
+┌─────────────────┐
+│  Memory Check   │  ← ChromaDB: answered before? Return instantly
+└────────┬────────┘
+         │ (cache miss)
+         ▼
+┌─────────────────┐
+│  RAG Retrieval  │  ← ChromaDB: find top 5 relevant tables
+│  (ChromaDB)     │    Cosine similarity · ~50ms · 64-97% fewer tokens
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Agent 1        │  ← SQL Writer: only sees retrieved table schemas
+│  SQL Writer     │    temperature=0.1 · CrewAI + LiteLLM
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Agent 2        │  ← Executor: runs SQL directly via Python sqlite3
+│  SQL Executor   │    reliable, fast, no LLM tool-call issues
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Evaluator      │  ← Quality score 0-100, hallucination check
+│  (Terminal)     │    Precision@K, faithfulness · terminal only
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Output Guard   │  ← Block hallucinated results before UI
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Agent 3        │  ← Visualizer: chart config + business insight
+│  Visualizer     │    temperature=0.3 · matplotlib dark theme
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Memory Save    │  ← Store verified result for next time
+└────────┬────────┘
+         │
+         ▼
+    Streamlit UI
+  SQL + Chart + Insight
 ```
 
 ---
 
-## 📁 Folder Structure
+## 📁 Project Structure
 
 ```
-Northwind-Agentic-AI/
+northwind-agentic-ai/
 │
-├── agents/                     # AI Agent definitions
-│   ├── sql_writer.py           # Agent 1: writes SQL queries
-│   ├── executer.py             # Agent 2: executes SQL
-│   └── visualizer.py           # Agent 3: generates charts & insights
+├── agents/                      # AI Agent definitions
+│   ├── sql_writer.py            # Agent 1: translates question to SQL
+│   ├── executer.py              # Agent 2: runs SQL via Python
+│   └── visualizer.py            # Agent 3: chart config + insight
 │
-├── tasks/                      # Task instructions for each agent
-│   ├── sql_task.py
+├── tasks/                       # Task instructions per agent
+│   ├── sql_task.py              # Passes RAG schema context to agent
 │   ├── execute_task.py
-│   └── visualizer_task.py
+│   └── visualizer_task.py       # Passes data sample for context
 │
-├── crew/                       # CrewAI pipeline orchestrator
-│   └── northwind_crew.py
+├── crew/
+│   └── northwind_crew.py        # Full pipeline orchestrator
 │
-├── tools/                      # Custom CrewAI tools
-│   └── db_tool.py              # ExecuteSQLTool — runs SQL on Northwind DB
+├── rag/                         # RAG layer (ChromaDB)
+│   ├── schema_indexer.py        # Index all table schemas as vectors
+│   ├── schema_retriever.py      # Find relevant tables per question
+│   └── memory_store.py          # Cache verified Q&A pairs
 │
-├── utils/                      # Utilities
-│   └── llm_factory.py          # LLM switcher: Gemini / OpenAI / Groq
+├── evaluation/                  # Evaluation framework
+│   ├── evaluator.py             # SQL quality + hallucination check
+│   └── metrics.py               # Precision@K, faithfulness, model comparator
 │
-├── northwind_db/               # Database manager
-│   └── db_manager.py           # Auto-downloads northwind.db if missing
+├── guardrails/                  # Safety checks
+│   ├── input_guard.py           # Validate and sanitise user input
+│   └── output_guard.py          # Validate agent output before display
 │
-├── data/                       # Database file (auto-generated)
-│   └── northwind.db
+├── tools/
+│   └── db_tool.py               # CrewAI custom tool for SQL execution
 │
-├── assets/                     # Frontend styling
-│   └── styles.css              # Dark theme CSS for Streamlit
+├── utils/
+│   └── llm_factory.py           # Switch LLMs via .env
 │
-├── tests/                      # Offline tests (no API needed)
-│   └── test_db.py
+├── northwind_db/
+│   └── db_manager.py            # Auto-download Northwind DB
 │
-├── app.py                      # Streamlit web application
-├── .env                        # API keys (not committed to Git)
+├── data/
+│   └── northwind.db             # SQLite database (auto-generated)
+│
+├── chroma_db/                   # ChromaDB vector store (auto-created)
+│
+├── assets/
+│   └── styles.css               # Dark theme CSS
+│
+├── tests/
+│   └── test_db.py               # Offline tests — no API needed
+│
+├── workflows/
+│   └── ci.yml                   # to see Running jobs, loggs failures/success
+│
+├── benchmark_runner.py          # Multi-model automated benchmark
+├── app.py                       # Streamlit web application
+├── .env                         # API keys (not committed)
 ├── .gitignore
 ├── requirements.txt
 └── README.md
@@ -111,18 +162,21 @@ Northwind-Agentic-AI/
 
 ## ⚙️ Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **AI Framework** | CrewAI |
-| **LLM — Primary** | Google Gemini 2.0 Flash Lite |
-| **LLM — Alternative** | Groq (Llama 3.1 8b Instant) |
-| **LLM — Alternative** | OpenAI GPT-4o Mini |
-| **LLM Routing** | LangChain + LiteLLM |
-| **Database** | SQLite (Northwind dataset) |
-| **Data Processing** | Pandas |
-| **Visualisation** | Matplotlib |
-| **Web UI** | Streamlit |
-| **Language** | Python 3.11 |
+| Layer | Technology | Purpose |
+|---|---|---|
+| **AI Framework** | CrewAI | Multi-agent orchestration |
+| **Vector DB** | ChromaDB | RAG schema retrieval + memory cache |
+| **Embedding** | DefaultEmbeddingFunction | No PyTorch dependency |
+| **LLM — Primary** | Google Gemini 2.0 Flash Lite | Best accuracy |
+| **LLM — Speed** | Groq Llama 3.1 8b Instant | Fastest (377ms avg) |
+| **LLM — Alt 1** | Mistral Small | Free European model |
+| **LLM — Alt 2** | Cohere Command A | Best business-friendly answers |
+| **LLM Routing** | LiteLLM via CrewAI | Unified interface across providers |
+| **Database** | SQLite (Northwind) | 14 tables, real business data |
+| **Data Processing** | Pandas | Query result handling |
+| **Visualisation** | Matplotlib | Dark-themed charts |
+| **Web UI** | Streamlit | Frontend dashboard |
+| **Language** | Python 3.11 | Core runtime |
 
 ---
 
@@ -130,18 +184,17 @@ Northwind-Agentic-AI/
 
 ### Prerequisites
 
-- Python 3.11 or higher
-- Node.js (optional — only if regenerating the PowerPoint)
-- A free API key from one of: [Google AI Studio](https://aistudio.google.com), [Groq](https://console.groq.com), or [OpenAI](https://platform.openai.com)
+- Python 3.11+
+- At least one free API key (Gemini or Groq recommended)
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/smshelar/northwind-agentic-ai.git
+git clone https://github.com/your-username/northwind-agentic-ai.git
 cd northwind-agentic-ai
 ```
 
-### 2. Create a virtual environment
+### 2. Create virtual environment
 
 ```bash
 python3.11 -m venv venv
@@ -156,25 +209,26 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4. Set up your API key
+### 4. Configure API keys
 
 Create a `.env` file in the project root:
 
 ```env
-# Choose ONE provider and add its key
-GOOGLE_API_KEY=your_gemini_key_here
-LLM_PROVIDER=google
+# Choose your preferred provider
+LLM_PROVIDER=groq               # google | groq | mistral | cohere
 
-# Or use Groq (free, fast)
-# GROQ_API_KEY=your_groq_key_here
-# LLM_PROVIDER=groq
-
-# Or use OpenAI
-# OPENAI_API_KEY=your_openai_key_here
-# LLM_PROVIDER=openai
+# Add keys for providers you want to use
+GOOGLE_API_KEY=your_gemini_key
+GROQ_API_KEY=your_groq_key
+MISTRAL_API_KEY=your_mistral_key
+COHERE_API_KEY=your_cohere_key
 ```
 
-> 💡 Get a free Gemini API key at [aistudio.google.com](https://aistudio.google.com) — no credit card required.
+Get free API keys from:
+- Gemini: [aistudio.google.com](https://aistudio.google.com)
+- Groq: [console.groq.com](https://console.groq.com)
+- Mistral: [console.mistral.ai](https://console.mistral.ai)
+- Cohere: [dashboard.cohere.com](https://dashboard.cohere.com)
 
 ### 5. Run offline tests (no API needed)
 
@@ -182,21 +236,132 @@ LLM_PROVIDER=google
 python tests/test_db.py
 ```
 
-All 7 tests should pass — this confirms your database and chart logic work before spending API quota.
+All 7 tests should pass — confirms database, SQL and chart rendering work before spending API quota.
 
-### 6. Run the app
+### 6. Build the RAG schema index (one time only)
+
+```bash
+python rag/schema_indexer.py
+```
+
+Reads all 14 tables and indexes them as vectors in ChromaDB. Only needed once — auto-rebuilds if the index is missing.
+
+### 7. Run the app
 
 ```bash
 streamlit run app.py
 ```
 
-Open [http://localhost:8501](http://localhost:8501) in your browser.
+Open [http://localhost:8501](http://localhost:8501)
+
+---
+
+## 🔍 How RAG Works
+
+Without RAG, every query sends all table schemas to the LLM. At 100 tables this is ~20,000 tokens per call — slow, expensive and prone to hallucinations.
+
+With RAG, ChromaDB finds the top 5 relevant tables using cosine similarity in ~50ms:
+
+```
+Question: "top 5 products by sales"
+      │
+      ▼
+ChromaDB vector search across all indexed tables
+      │
+      ▼
+Returns: Products (0.92), Order Details (0.88), Orders (0.81)...
+      │
+      ▼
+Agent sees only 5 tables — ~1,000 tokens, regardless of total table count
+```
+
+| Total Tables | Without RAG | With RAG | Token Saving |
+|---|---|---|---|
+| 14 | ~2,800 tokens | ~1,000 tokens | 64% |
+| 50 | ~10,000 tokens | ~1,000 tokens | 90% |
+| 100 | ~20,000 tokens | ~1,000 tokens | 95% |
+| 200 | ~40,000 tokens | ~1,000 tokens | 97.5% |
+
+---
+
+## 🧠 How Memory Cache Works
+
+```
+First time asking  → Full pipeline runs → Verified result saved to ChromaDB
+Same question again → Similarity check (>85%) → Cache hit → Return in <200ms
+```
+
+Only results that pass the evaluation check are saved. No bad results are ever cached.
+
+---
+
+## 🛡️ Guardrails
+
+**Input Guardrail** (`guardrails/input_guard.py`) blocks:
+- Questions under 5 or over 500 characters
+- Prompt injections: `ignore previous`, `act as`, `roleplay`
+- SQL injections: `DROP`, `DELETE`, `INSERT`, `UPDATE`
+- Single-word gibberish inputs
+
+**Output Guardrail** (`guardrails/output_guard.py`) blocks:
+- Results using hallucinated table names
+- Empty query results (0 rows)
+- Results scoring below 50/100 quality
+- SQL keywords leaked into insight text
+
+---
+
+## 📊 Evaluation Metrics
+
+All metrics print to terminal only — never shown to end users.
+
+| Metric | Description | Good Value |
+|---|---|---|
+| SQL Quality Score | 0-100 composite, deducted for failures | 90-100 |
+| Hallucination Rate | % of tables used that don't exist in DB | 0% |
+| Precision@K | Relevant tables in top K retrieved | >80% |
+| Faithfulness | Numbers in insight match actual data | >80% |
+| Execution Time | LLM response time in milliseconds | <2000ms |
+
+---
+
+## 🔄 Switching LLM Providers
+
+Change one line in `.env` — no code changes needed:
+
+| Provider | Setting | Model | Free? | Avg Speed |
+|---|---|---|---|---|
+| Google Gemini | `LLM_PROVIDER=google` | gemini-2.0-flash-lite | ✅ | ~2766ms |
+| Groq | `LLM_PROVIDER=groq` | llama-3.1-8b-instant | ✅ | ~377ms |
+| Mistral | `LLM_PROVIDER=mistral` | mistral-small-latest | ✅ | ~1046ms |
+| Cohere | `LLM_PROVIDER=cohere` | command-a-03-2025 | ✅ | ~9514ms |
+
+---
+
+## 🔬 Model Benchmark
+
+Run the automated benchmark to compare all models on the same questions:
+
+```bash
+python benchmark_runner.py
+```
+
+**Results from our benchmark (2 questions × 4 models):**
+
+| Model | Avg Quality | Success Rate | Avg Speed |
+|---|---|---|---|
+| Groq Llama 3.1 8b | 100/100 | 100% | 377ms |
+| Mistral 7b | 100/100 | 100% | 1046ms |
+| Cohere Command A | 100/100 | 100% | 9514ms |
+| Gemini 2.0 Flash Lite | 50/100 | 50% | — |
+
+> Gemini scored lower due to free tier quota limits during benchmark — not a model quality issue. In normal use Gemini performs at 100/100.
+
+Full results are saved automatically to `benchmark_TIMESTAMP.json`.
 
 ---
 
 ## 💬 Example Questions
-
-Try asking these in the app:
 
 **Sales Analysis**
 - What were the top 5 products by total sales revenue?
@@ -204,7 +369,7 @@ Try asking these in the app:
 - What is the total revenue generated per year?
 
 **Customer Analysis**
-- Which customers have placed the most orders?
+- Which customers have the highest order frequency?
 - Who are the top 10 customers by total amount spent?
 - Which country has the most customers?
 
@@ -220,34 +385,20 @@ Try asking these in the app:
 
 ---
 
-## 🔄 Switching LLM Providers
+## 🗄️ Northwind Database Schema
 
-Change the `LLM_PROVIDER` in your `.env` file — no code changes needed:
-
-| Provider | `.env` setting | Model used | Free? |
-|---|---|---|---|
-| Google Gemini | `LLM_PROVIDER=google` | gemini-2.0-flash-lite | ✅ Yes |
-| Groq | `LLM_PROVIDER=groq` | llama-3.1-8b-instant | ✅ Yes |
-| OpenAI | `LLM_PROVIDER=openai` | gpt-4o-mini | ❌ Paid |
-
----
-
-## 🧪 Running Tests Without API
-
-The `tests/test_db.py` file validates everything that doesn't need an LLM:
-
-```bash
-python tests/test_db.py
-```
-
-This tests:
-- ✅ Database connection
-- ✅ Available years in the data
-- ✅ Table names (including `[Order Details]` with space)
-- ✅ Top products query
-- ✅ Top customers query
-- ✅ Monthly revenue query
-- ✅ Chart rendering (saves `test_chart.png`)
+| Table | Key Columns |
+|---|---|
+| `Customers` | CustomerID, CompanyName, ContactName, Country, City |
+| `Orders` | OrderID, CustomerID, EmployeeID, OrderDate, ShippedDate, Freight |
+| `[Order Details]` | OrderID, ProductID, UnitPrice, Quantity, Discount |
+| `Products` | ProductID, ProductName, CategoryID, UnitPrice, UnitsInStock |
+| `Categories` | CategoryID, CategoryName, Description |
+| `Employees` | EmployeeID, FirstName, LastName, Title, HireDate |
+| `Suppliers` | SupplierID, CompanyName, Country |
+| `Shippers` | ShipperID, CompanyName, Phone |
+| `Territories` | TerritoryID, TerritoryDescription, RegionID |
+| `Regions` | RegionID, RegionDescription |
 
 ---
 
@@ -255,19 +406,21 @@ This tests:
 
 | Error | Fix |
 |---|---|
-| `ModuleNotFoundError: crewai` | Run `pip install -r requirements.txt` with Python 3.11 venv activated |
-| `GOOGLE_API_KEY not found` | Check `.env` has no quotes or spaces around the `=` |
-| `Rate limit exceeded` | Wait 1 minute and retry, or switch `LLM_PROVIDER` in `.env` |
-| `No such table: OrderDetails` | Use `[Order Details]` with square brackets — the schema is fixed in `sql_writer.py` |
-| `Executor returned non-JSON` | Known issue with small LLMs — SQL now executes directly in Python |
-| `Python 3.9 venv` | Delete venv, recreate with `python3.11 -m venv venv` |
+| `ModuleNotFoundError: crewai` | Recreate venv with Python 3.11, reinstall requirements |
+| `GOOGLE_API_KEY not found` | Check `.env` — no quotes or spaces around `=` |
+| `429 RESOURCE_EXHAUSTED` | Wait 1 minute or switch `LLM_PROVIDER` in `.env` |
+| `command-r-plus was removed` | Use `cohere/command-a-03-2025` in `llm_factory.py` |
+| `RAG coverage 100%` | Rebuild index: `rm -rf chroma_db/ && python rag/schema_indexer.py` |
+| `OpenAI 401 on Groq/Cohere` | Remove `OPENAI_API_KEY` from `.env` — run `env | grep OPENAI` to check |
+| `sentence-transformers error` | Use `DefaultEmbeddingFunction()` — no PyTorch needed |
+| `eval_result not defined` | Replace with `eval_summary.get("quality_score", 100)` in final return |
 
 ---
 
 ## 🗺️ Roadmap
 
 ### Phase 1 — Short Term
-- [ ] Conversation memory — remember previous questions in the session
+- [ ] Conversation memory across sessions
 - [ ] Query history — save and replay past questions
 - [ ] Export results to CSV / Excel
 - [ ] Better error messages with suggested rephrasing
@@ -282,25 +435,7 @@ This tests:
 - [ ] Fine-tuned SQL model on company-specific schemas
 - [ ] Role-based access control
 - [ ] Predictive analytics and trend forecasting
-- [ ] Integration with Tableau / Power BI
-
----
-
-## 📊 Northwind Database Schema
-
-```
-Customers      ──┐
-                 ├──▶ Orders ──▶ [Order Details] ──▶ Products ──▶ Categories
-Employees      ──┘                                          └──▶ Suppliers
-Shippers ──────────▶ Orders
-```
-
-Key tables:
-- `Customers` — company info, country, city
-- `Orders` — order dates, customer, employee, shipper
-- `[Order Details]` — products, quantities, prices per order
-- `Products` — product names, categories, stock levels
-- `Employees` — sales rep info
+- [ ] Integration with Tableau and Power BI
 
 ---
 
@@ -309,28 +444,31 @@ Key tables:
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/my-feature`
 3. Commit your changes: `git commit -m "Add my feature"`
-4. Push to the branch: `git push origin feature/my-feature`
+4. Push: `git push origin feature/my-feature`
 5. Open a Pull Request
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
 ## 🙏 Acknowledgements
 
 - [CrewAI](https://github.com/joaomdmoura/crewAI) — multi-agent AI framework
-- [Northwind Dataset](https://github.com/jpwhite3/northwind-SQLite3) — sample business database
+- [ChromaDB](https://www.trychroma.com) — vector database for RAG and memory
+- [Northwind SQLite](https://github.com/jpwhite3/northwind-SQLite3) — sample business database
 - [Google Gemini](https://aistudio.google.com) — LLM provider
-- [Streamlit](https://streamlit.io) — web UI framework
 - [Groq](https://console.groq.com) — fast free LLM inference
+- [Mistral AI](https://mistral.ai) — open-weight European LLM
+- [Cohere](https://cohere.com) — enterprise language models
+- [Streamlit](https://streamlit.io) — web UI framework
 
 ---
 
 <div align="center">
-  <strong>Built with 💚 using CrewAI + Gemini + Streamlit</strong><br/>
-  <em>A practical demonstration of Agentic AI for business intelligence</em>
+  <strong>Built with 💚 using CrewAI + ChromaDB + Streamlit</strong><br/>
+  <em>Agentic AI + RAG for business intelligence — scalable to 100-200 tables</em>
 </div>

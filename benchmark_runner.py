@@ -376,9 +376,18 @@ def save_report_to_file(all_results: list[BenchmarkResult]):
             for r in all_results
         ]
     }
-    filename = f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    # Ensure folder exists
+    os.makedirs("benchmark files", exist_ok=True)
+
+    # Create filename inside folder
+    filename = os.path.join(
+        "benchmark files",
+        f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
+
     with open(filename, "w") as f:
         json.dump(report, f, indent=2)
+
     print(f"📁 Full report saved to: {filename}")
 
 
