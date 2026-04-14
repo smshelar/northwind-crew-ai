@@ -449,9 +449,9 @@ Full results are saved automatically to `benchmark_TIMESTAMP.json`.
 
 ---
 
-## 📄 License
+## 📄 Link for app
 
-MIT License — see [LICENSE](LICENSE) for details.
+- [my app](https://northwind-crew-ai-agentic-rag.streamlit.app/)
 
 ---
 
