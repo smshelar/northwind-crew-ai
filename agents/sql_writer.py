@@ -49,7 +49,7 @@ def create_sql_writer(schema_context: str = "") -> Agent:
             "JOIN Products p ON od.ProductID = p.ProductID\n"
             "GROUP BY p.ProductName ORDER BY TotalSales DESC LIMIT 5;"
         ),
-        #llm=get_llm(temperature=0.1),
+        # `get_llm()` returns the CrewAI model string directly.
         llm=get_llm(),
         verbose=True,
         #allow_delegation=False,

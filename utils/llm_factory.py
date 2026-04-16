@@ -103,9 +103,8 @@
 """
 llm_factory.py
 --------------
-Returns CrewAI-compatible LLM model strings based on LLM_PROVIDER.
-Also hydrates provider API keys into environment variables so CrewAI can
-initialize the selected provider across local/dev/Streamlit deployments.
+Builds an LLM object compatible with both older CrewAI releases
+(for example `crewai==0.11.2` on Streamlit Cloud) and newer versions.
 """
 
 import os
@@ -131,35 +130,139 @@ def _require_key(secrets, *names: str) -> str:
     raise ValueError(f"Required API key not found. Tried: {', '.join(names)}")
 
 
-def get_llm(temperature: float = 0.2) -> str:
-    """
-    Return a CrewAI-compatible model string for the configured provider.
+def _build_modern_crewai_llm(model: str, temperature: float, api_key: str, base_url: str | None = None):
+    """Use CrewAI's native LLM wrapper when available."""
+    try:
+        from crewai import LLM
 
-    NOTE: `temperature` is kept in the signature for backward compatibility
-    with existing call sites, even though CrewAI's Agent uses the model string.
-    """
-    _ = temperature  # intentionally unused, retained for compatibility
+        kwargs = {
+            "model": model,
+            "temperature": temperature,
+            "api_key": api_key,
+        }
+        if base_url:
+            kwargs["base_url"] = base_url
+        return LLM(**kwargs)
+    except Exception:
+        return None
+
+
+def _build_langchain_chat_openai(model: str, temperature: float, api_key: str, base_url: str | None = None):
+    """Fallback for older CrewAI versions that expect a LangChain chat model."""
+    try:
+        from langchain_openai import ChatOpenAI
+
+        kwargs = {
+            "model_name": model,
+            "temperature": temperature,
+            "api_key": api_key,
+        }
+        if base_url:
+            kwargs["base_url"] = base_url
+        return ChatOpenAI(**kwargs)
+    except Exception:
+        return None
+
+
+def get_llm(temperature: float = 0.2):
+    """Return an LLM object compatible with the installed CrewAI stack."""
     provider, secrets = _load_provider_and_secrets()
 
     if provider in ("google", "gemini"):
-        os.environ["GEMINI_API_KEY"] = _require_key(secrets, "GEMINI_API_KEY", "GOOGLE_API_KEY")
-        return "gemini/gemini-2.0-flash-lite"
+        api_key = _require_key(secrets, "GEMINI_API_KEY", "GOOGLE_API_KEY")
+        os.environ["GEMINI_API_KEY"] = api_key
+
+        llm = _build_modern_crewai_llm(
+            model="gemini/gemini-2.0-flash-lite",
+            temperature=temperature,
+            api_key=api_key,
+        )
+        if llm is not None:
+            return llm
+
+        raise ValueError(
+            "Gemini requires a newer CrewAI runtime in this project. "
+            "Upgrade CrewAI or switch LLM_PROVIDER to openai/groq/mistral."
+        )
 
     if provider == "openai":
-        os.environ["OPENAI_API_KEY"] = _require_key(secrets, "OPENAI_API_KEY")
-        return "gpt-4o-mini"
+        api_key = _require_key(secrets, "OPENAI_API_KEY")
+        os.environ["OPENAI_API_KEY"] = api_key
+
+        llm = _build_modern_crewai_llm(
+            model="openai/gpt-4o-mini",
+            temperature=temperature,
+            api_key=api_key,
+        )
+        if llm is not None:
+            return llm
+
+        llm = _build_langchain_chat_openai(
+            model="gpt-4o-mini",
+            temperature=temperature,
+            api_key=api_key,
+        )
+        if llm is not None:
+            return llm
 
     if provider == "groq":
-        os.environ["GROQ_API_KEY"] = _require_key(secrets, "GROQ_API_KEY")
-        return "groq/llama-3.1-8b-instant"
+        api_key = _require_key(secrets, "GROQ_API_KEY")
+        os.environ["GROQ_API_KEY"] = api_key
+
+        llm = _build_modern_crewai_llm(
+            model="groq/llama-3.1-8b-instant",
+            temperature=temperature,
+            api_key=api_key,
+        )
+        if llm is not None:
+            return llm
+
+        llm = _build_langchain_chat_openai(
+            model="llama-3.1-8b-instant",
+            temperature=temperature,
+            api_key=api_key,
+            base_url="https://api.groq.com/openai/v1",
+        )
+        if llm is not None:
+            return llm
 
     if provider == "mistral":
-        os.environ["MISTRAL_API_KEY"] = _require_key(secrets, "MISTRAL_API_KEY")
-        return "mistral/mistral-small-latest"
+        api_key = _require_key(secrets, "MISTRAL_API_KEY")
+        os.environ["MISTRAL_API_KEY"] = api_key
+
+        llm = _build_modern_crewai_llm(
+            model="mistral/mistral-small-latest",
+            temperature=temperature,
+            api_key=api_key,
+        )
+        if llm is not None:
+            return llm
+
+        llm = _build_langchain_chat_openai(
+            model="mistral-small-latest",
+            temperature=temperature,
+            api_key=api_key,
+            base_url="https://api.mistral.ai/v1",
+        )
+        if llm is not None:
+            return llm
 
     if provider == "cohere":
-        os.environ["COHERE_API_KEY"] = _require_key(secrets, "COHERE_API_KEY")
-        return "cohere/command-a-03-2025"
+        api_key = _require_key(secrets, "COHERE_API_KEY")
+        os.environ["COHERE_API_KEY"] = api_key
+
+        llm = _build_modern_crewai_llm(
+            model="cohere/command-a-03-2025",
+            temperature=temperature,
+            api_key=api_key,
+        )
+        if llm is not None:
+            return llm
+
+        raise ValueError(
+            "Cohere requires a newer CrewAI runtime in this project. "
+            "Upgrade CrewAI or switch LLM_PROVIDER to openai/groq/mistral."
+        )
 
     raise ValueError(
         f"Unknown LLM_PROVIDER: '{provider}'. "
