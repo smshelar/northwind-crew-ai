@@ -7,6 +7,7 @@ CrewAI Agent: interprets data, produces chart config + business insight.
 from crewai import Agent
 from utils.llm_factory import get_llm
 
+
 def create_visualizer() -> Agent:
     return Agent(
         role="Data Visualizer & Analyst",

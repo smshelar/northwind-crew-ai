@@ -19,21 +19,53 @@ class GuardrailResult:
 
 # Questions that are clearly not business database queries
 NON_BUSINESS_PATTERNS = [
-    r'\b(hack|exploit|inject|drop table|delete from|truncate)\b',
-    r'\b(ignore previous|ignore all|disregard|forget your)\b',
-    r'\b(you are now|act as|pretend to be|roleplay)\b',
-    r'\b(password|credit card|ssn|social security)\b',
-    r'\b(kill|murder|weapon|bomb|terrorist)\b',
+    r"\b(hack|exploit|inject|drop table|delete from|truncate)\b",
+    r"\b(ignore previous|ignore all|disregard|forget your)\b",
+    r"\b(you are now|act as|pretend to be|roleplay)\b",
+    r"\b(password|credit card|ssn|social security)\b",
+    r"\b(kill|murder|weapon|bomb|terrorist)\b",
 ]
 
 # Must contain at least some business intent
 BUSINESS_KEYWORDS = [
-    "product", "customer", "order", "sale", "revenue", "employee",
-    "supplier", "category", "ship", "freight", "profit", "stock",
-    "inventory", "top", "best", "worst", "most", "least", "average",
-    "total", "count", "how many", "which", "what", "show", "list",
-    "compare", "trend", "monthly", "yearly", "quarterly", "country",
-    "city", "company", "price", "quantity", "discount", "region",
+    "product",
+    "customer",
+    "order",
+    "sale",
+    "revenue",
+    "employee",
+    "supplier",
+    "category",
+    "ship",
+    "freight",
+    "profit",
+    "stock",
+    "inventory",
+    "top",
+    "best",
+    "worst",
+    "most",
+    "least",
+    "average",
+    "total",
+    "count",
+    "how many",
+    "which",
+    "what",
+    "show",
+    "list",
+    "compare",
+    "trend",
+    "monthly",
+    "yearly",
+    "quarterly",
+    "country",
+    "city",
+    "company",
+    "price",
+    "quantity",
+    "discount",
+    "region",
 ]
 
 MIN_QUESTION_LENGTH = 5
@@ -68,14 +100,12 @@ def validate_input(question: str) -> GuardrailResult:
     for pattern in NON_BUSINESS_PATTERNS:
         if re.search(pattern, question_lower, re.IGNORECASE):
             reason = f"Blocked pattern detected: '{pattern}'"
-            print(f"  ❌ BLOCKED: Prompt injection or harmful input detected")
+            print("  ❌ BLOCKED: Prompt injection or harmful input detected")
             print(f"{'=' * 65}\n")
             return GuardrailResult(passed=False, reason=reason)
 
     # ── Check 3: Must look like a business question ───────────
-    has_business_intent = any(
-        kw in question_lower for kw in BUSINESS_KEYWORDS
-    )
+    has_business_intent = any(kw in question_lower for kw in BUSINESS_KEYWORDS)
     if not has_business_intent:
         reason = (
             "No business intent detected. "
@@ -96,11 +126,13 @@ def validate_input(question: str) -> GuardrailResult:
     # ── Sanitise input ────────────────────────────────────────
     # Remove any SQL-like injections from the question text
     safe_question = re.sub(
-        r'(;|--|\bDROP\b|\bDELETE\b|\bINSERT\b|\bUPDATE\b)',
-        '', question, flags=re.IGNORECASE
+        r"(;|--|\bDROP\b|\bDELETE\b|\bINSERT\b|\bUPDATE\b)",
+        "",
+        question,
+        flags=re.IGNORECASE,
     ).strip()
 
-    print(f"  ✅ PASSED all guardrail checks")
+    print("  ✅ PASSED all guardrail checks")
     if safe_question != question:
         print(f"  🧹 Sanitised: '{safe_question[:80]}'")
     print(f"{'=' * 65}\n")

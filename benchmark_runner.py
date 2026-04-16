@@ -22,6 +22,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from dotenv import load_dotenv
+
 load_dotenv(override=True)
 
 # Clear any stale OpenAI key that might interfere
@@ -41,41 +42,39 @@ BENCHMARK_QUESTIONS = [
 # ── Models to compare ─────────────────────────────────────
 MODELS_TO_TEST = [
     {
-        "provider":  "gemini",
+        "provider": "gemini",
         "api_key_env": "GOOGLE_API_KEY",
         "display_name": "Gemini 2.0 Flash Lite",
         "model_string": "gemini/gemini-2.0-flash-lite",
     },
     {
-        "provider":  "groq",
+        "provider": "groq",
         "api_key_env": "GROQ_API_KEY",
         "display_name": "Groq Llama 3.1 8b",
         "model_string": "groq/llama-3.1-8b-instant",
     },
     # {
-    #     "provider":    "openai",       
+    #     "provider":    "openai",
     #     "api_key_env": "OPENAI_API_KEY",
     #     "display_name": "GPT-4o Mini",
     #     "model_string": "gpt-4o-mini",
     # },
     {
-    "provider":    "mistral",
-    "api_key_env": "MISTRAL_API_KEY",
-    "display_name": "Mistral 7b",
-    "model_string": "mistral/mistral-tiny",
+        "provider": "mistral",
+        "api_key_env": "MISTRAL_API_KEY",
+        "display_name": "Mistral 7b",
+        "model_string": "mistral/mistral-tiny",
     },
     {
-    "provider":    "cohere",
-    "api_key_env": "COHERE_API_KEY",
-    "display_name": "Cohere Command A",
-    "model_string": "cohere/command-a-03-2025",
+        "provider": "cohere",
+        "api_key_env": "COHERE_API_KEY",
+        "display_name": "Cohere Command A",
+        "model_string": "cohere/command-a-03-2025",
     },
 ]
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "northwind.db")
 SEP = "=" * 75
-
-
 
 
 # ── Result dataclass ──────────────────────────────────────
@@ -96,16 +95,16 @@ class BenchmarkResult:
 # ── Helpers ───────────────────────────────────────────────
 def get_all_tables() -> list[str]:
     conn = sqlite3.connect(DB_PATH)
-    cursor = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table'"
-    )
+    cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
     tables = [row[0] for row in cursor.fetchall()]
     conn.close()
     return tables
 
+
 def run_sql(sql: str):
-    import pandas as pd  
+    import pandas as pd
     import re as _re
+
     sql = _re.sub(r"```(?:sql)?", "", sql).strip().rstrip("`").strip()
     conn = sqlite3.connect(DB_PATH)
     try:
@@ -116,12 +115,12 @@ def run_sql(sql: str):
     finally:
         conn.close()
 
+
 # REPLACE WITH THIS
 def extract_tables(sql: str, all_tables: list[str]) -> tuple:
     real = {t.lower(): t for t in all_tables}
     matches = re.findall(
-        r'(?:FROM|JOIN)\s+[\[\`"]?([^\s\[\]`,;()]+)[\]\`"]?',
-        sql, re.IGNORECASE
+        r'(?:FROM|JOIN)\s+[\[\`"]?([^\s\[\]`,;()]+)[\]\`"]?', sql, re.IGNORECASE
     )
 
     # Tables with spaces that get split by regex — never flag these
@@ -148,8 +147,7 @@ def switch_model(provider: str, api_key_env: str):
     api_key = os.getenv(api_key_env)
     if not api_key:
         raise ValueError(
-            f"❌ {api_key_env} not found in .env file. "
-            f"Add it to test {provider}."
+            f"❌ {api_key_env} not found in .env file. " f"Add it to test {provider}."
         )
     if provider in ("gemini", "google"):
         os.environ["GOOGLE_API_KEY"] = api_key
@@ -177,26 +175,18 @@ def run_single_benchmark(
 
     try:
         # Switch model
-        switch_model(
-            model_config["provider"],
-            model_config["api_key_env"]
-        )
+        switch_model(model_config["provider"], model_config["api_key_env"])
 
         # Import here so env vars are picked up fresh
-        from utils.llm_factory import get_llm
         from rag.schema_retriever import retrieve_relevant_schema
 
         # RAG retrieval
         try:
-            schema_context, retrieved_tables = retrieve_relevant_schema(
-                question, top_k=5
-            )
+            schema_context, _ = retrieve_relevant_schema(question, top_k=5)
         except Exception:
             schema_context = ""
-            retrieved_tables = []
 
         # Build and run SQL writer agent
-        from agents.sql_writer import create_sql_writer
         from crewai import Crew, Process
         from tasks.sql_task import create_sql_task
 
@@ -205,7 +195,7 @@ def run_single_benchmark(
             agents=[sql_task.agent],
             tasks=[sql_task],
             process=Process.sequential,
-            verbose=False,   # silent during benchmark
+            verbose=False,  # silent during benchmark
         )
 
         start = time.time()
@@ -225,9 +215,7 @@ def run_single_benchmark(
         elapsed = (time.time() - start) * 1000
 
         sql_query = sql_result.tasks_output[0].raw.strip()
-        sql_query = re.sub(
-            r"```(?:sql)?", "", sql_query
-        ).strip().rstrip("`").strip()
+        sql_query = re.sub(r"```(?:sql)?", "", sql_query).strip().rstrip("`").strip()
 
         result.sql_generated = sql_query
         result.execution_time_ms = elapsed
@@ -269,11 +257,12 @@ def print_question_comparison(
 
     for r in results:
         status = "✅" if r.sql_success else "❌"
-        halluc = "None ✅" if not r.hallucinated_tables \
-            else str(r.hallucinated_tables)
+        halluc = "None ✅" if not r.hallucinated_tables else str(r.hallucinated_tables)
         print(f"\n  [{r.model}]")
-        print(f"    Status       : {status} "
-              f"{'Success' if r.sql_success else 'Failed'}")
+        print(
+            f"    Status       : {status} "
+            f"{'Success' if r.sql_success else 'Failed'}"
+        )
         print(f"    Rows         : {r.rows_returned}")
         print(f"    Time         : {r.execution_time_ms:.0f}ms")
         print(f"    Quality      : {r.quality_score}/100")
@@ -294,11 +283,12 @@ def print_final_report(all_results: list[BenchmarkResult]):
     print(f"    Questions tested: {len(BENCHMARK_QUESTIONS)}")
     print(SEP)
 
-    print(f"\n{'Model':<28} {'Avg Quality':>12} "
-          f"{'Success%':>10} {'Halluc%':>10} "
-          f"{'Avg Rows':>10} {'Avg Time':>12}")
-    print(f"{'─' * 28} {'─' * 12} {'─' * 10} "
-          f"{'─' * 10} {'─' * 10} {'─' * 12}")
+    print(
+        f"\n{'Model':<28} {'Avg Quality':>12} "
+        f"{'Success%':>10} {'Halluc%':>10} "
+        f"{'Avg Rows':>10} {'Avg Time':>12}"
+    )
+    print(f"{'─' * 28} {'─' * 12} {'─' * 10} " f"{'─' * 10} {'─' * 10} {'─' * 12}")
 
     scores = {}
     for model in models:
@@ -306,22 +296,20 @@ def print_final_report(all_results: list[BenchmarkResult]):
         total = len(model_results)
 
         avg_quality = sum(r.quality_score for r in model_results) / total
-        success_pct = sum(
-            1 for r in model_results if r.sql_success
-        ) / total * 100
-        halluc_pct = sum(
-            1 for r in model_results if r.hallucinated_tables
-        ) / total * 100
+        success_pct = sum(1 for r in model_results if r.sql_success) / total * 100
+        halluc_pct = (
+            sum(1 for r in model_results if r.hallucinated_tables) / total * 100
+        )
         avg_rows = sum(r.rows_returned for r in model_results) / total
-        avg_time = sum(
-            r.execution_time_ms for r in model_results
-        ) / total
+        avg_time = sum(r.execution_time_ms for r in model_results) / total
 
         scores[model] = avg_quality
 
-        print(f"{model:<28} {avg_quality:>11.1f} "
-              f"{success_pct:>9.0f}% {halluc_pct:>9.0f}% "
-              f"{avg_rows:>10.1f} {avg_time:>10.0f}ms")
+        print(
+            f"{model:<28} {avg_quality:>11.1f} "
+            f"{success_pct:>9.0f}% {halluc_pct:>9.0f}% "
+            f"{avg_rows:>10.1f} {avg_time:>10.0f}ms"
+        )
 
     print(f"\n{SEP}")
 
@@ -332,19 +320,18 @@ def print_final_report(all_results: list[BenchmarkResult]):
         diff = scores[winner] - scores[loser]
         print(f"🏆  WINNER     : {winner}")
         print(f"📈  Score gap  : {diff:.1f} points")
-        print(f"💡  Verdict    : ", end="")
+        print("💡  Verdict    : ", end="")
         if diff > 20:
             print(f"{winner} is significantly better")
         elif diff > 10:
             print(f"{winner} is moderately better")
         else:
-            print("Both models perform similarly — "
-                  "choose based on speed/cost")
+            print("Both models perform similarly — " "choose based on speed/cost")
 
     print(SEP)
 
     # Per-question winner
-    print(f"\n📋  QUESTION-BY-QUESTION WINNERS")
+    print("\n📋  QUESTION-BY-QUESTION WINNERS")
     print(f"{'─' * 75}")
     questions = list(dict.fromkeys(r.question for r in all_results))
     for q in questions:
@@ -374,15 +361,14 @@ def save_report_to_file(all_results: list[BenchmarkResult]):
                 "error": r.error,
             }
             for r in all_results
-        ]
+        ],
     }
     # Ensure folder exists
     os.makedirs("benchmark files", exist_ok=True)
 
     # Create filename inside folder
     filename = os.path.join(
-        "benchmark files",
-        f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        "benchmark files", f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     )
 
     with open(filename, "w") as f:
@@ -395,8 +381,10 @@ def save_report_to_file(all_results: list[BenchmarkResult]):
 def main():
     print(f"\n{SEP}")
     print("🔬  NORTHWIND AI — MODEL BENCHMARK")
-    print(f"    Testing {len(MODELS_TO_TEST)} models "
-          f"× {len(BENCHMARK_QUESTIONS)} questions")
+    print(
+        f"    Testing {len(MODELS_TO_TEST)} models "
+        f"× {len(BENCHMARK_QUESTIONS)} questions"
+    )
     print(SEP)
 
     # Check API keys first
@@ -404,11 +392,12 @@ def main():
     for model in MODELS_TO_TEST:
         key = os.getenv(model["api_key_env"])
         status = "✅ Found" if key else "❌ MISSING"
-        print(f"   {model['display_name']:<25} "
-              f"{model['api_key_env']}: {status}")
+        print(f"   {model['display_name']:<25} " f"{model['api_key_env']}: {status}")
         if not key:
-            print(f"   ⚠️  Add {model['api_key_env']} "
-                  f"to your .env file to test this model")
+            print(
+                f"   ⚠️  Add {model['api_key_env']} "
+                f"to your .env file to test this model"
+            )
 
     all_tables = get_all_tables()
     print(f"\n📊 Database: {len(all_tables)} tables found")
@@ -425,25 +414,24 @@ def main():
         for model_config in MODELS_TO_TEST:
             key = os.getenv(model_config["api_key_env"])
             if not key:
-                print(f"  ⏭️  Skipping {model_config['display_name']} "
-                      f"— no API key")
+                print(f"  ⏭️  Skipping {model_config['display_name']} " f"— no API key")
                 continue
 
             print(f"\n  🤖 Running with {model_config['display_name']}...")
-            result = run_single_benchmark(
-                question, model_config, all_tables
-            )
+            result = run_single_benchmark(question, model_config, all_tables)
             question_results.append(result)
             all_results.append(result)
 
             # Brief result per model
             status = "✅" if result.sql_success else "❌"
-            print(f"     {status} Score: {result.quality_score}/100  "
-                  f"Rows: {result.rows_returned}  "
-                  f"Time: {result.execution_time_ms:.0f}ms")
+            print(
+                f"     {status} Score: {result.quality_score}/100  "
+                f"Rows: {result.rows_returned}  "
+                f"Time: {result.execution_time_ms:.0f}ms"
+            )
 
             # Rate limit pause between models
-            print(f"     ⏳ Waiting 5s before next model...")
+            print("     ⏳ Waiting 5s before next model...")
             time.sleep(20)
 
         # Side by side for this question
@@ -452,7 +440,7 @@ def main():
 
         # Pause between questions to avoid rate limits
         if q_num < len(BENCHMARK_QUESTIONS):
-            print(f"\n  ⏳ Waiting 10s before next question...")
+            print("\n  ⏳ Waiting 10s before next question...")
             time.sleep(60)
 
     # Final report

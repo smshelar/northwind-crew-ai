@@ -1,5 +1,6 @@
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from langchain_core.tools import BaseTool
@@ -10,8 +11,10 @@ import json
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "northwind.db")
 
+
 class SQLInput(BaseModel):
     query: str = Field(description="Valid SQLite SQL query to execute")
+
 
 class ExecuteSQLTool(BaseTool):
     name: str = "execute_sql"

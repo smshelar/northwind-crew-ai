@@ -1,10 +1,11 @@
-
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from crewai import Task
 from agents.executer import create_executer
+
 
 def create_execute_task(sql_query: str = "") -> Task:
     return Task(

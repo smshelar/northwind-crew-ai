@@ -1,9 +1,11 @@
 import os
 import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from crewai import Agent
 from utils.llm_factory import get_llm
+
 
 def create_sql_writer(schema_context: str = "") -> Agent:
     """
@@ -52,5 +54,5 @@ def create_sql_writer(schema_context: str = "") -> Agent:
         # `get_llm()` returns the CrewAI model string directly.
         llm=get_llm(),
         verbose=True,
-        #allow_delegation=False,
+        # allow_delegation=False,
     )

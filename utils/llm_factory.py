@@ -110,7 +110,6 @@ Builds an LLM object compatible with both older CrewAI releases
 import os
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 
@@ -134,7 +133,9 @@ def _require_key(secrets, *names: str) -> str:
     raise ValueError(f"Required API key not found. Tried: {', '.join(names)}")
 
 
-def _build_modern_crewai_llm(model: str, temperature: float, api_key: str, base_url: str | None = None):
+def _build_modern_crewai_llm(
+    model: str, temperature: float, api_key: str, base_url: str | None = None
+):
     """Use CrewAI's native LLM wrapper when available."""
     try:
         from crewai import LLM
@@ -151,7 +152,9 @@ def _build_modern_crewai_llm(model: str, temperature: float, api_key: str, base_
         return None
 
 
-def _build_langchain_chat_openai(model: str, temperature: float, api_key: str, base_url: str | None = None):
+def _build_langchain_chat_openai(
+    model: str, temperature: float, api_key: str, base_url: str | None = None
+):
     """Fallback for older CrewAI versions that expect a LangChain chat model."""
     try:
         from langchain_openai import ChatOpenAI

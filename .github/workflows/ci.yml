@@ -31,4 +31,6 @@ jobs:
         run: python -m black --check .
 
       - name: DB smoke tests
+        env:
+          MPLCONFIGDIR: /tmp
         run: python tests/test_db.py

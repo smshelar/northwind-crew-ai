@@ -10,6 +10,7 @@ import os
 import sys
 import hashlib
 from datetime import datetime
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import chromadb
@@ -43,15 +44,12 @@ def _get_or_create_collection():
     client = get_client()
     embed_fn = get_embed_fn()
     try:
-        return client.get_collection(
-            name="query_memory",
-            embedding_function=embed_fn
-        )
+        return client.get_collection(name="query_memory", embedding_function=embed_fn)
     except Exception:
         return client.create_collection(
             name="query_memory",
             embedding_function=embed_fn,
-            metadata={"description": "Cached verified Q&A pairs"}
+            metadata={"description": "Cached verified Q&A pairs"},
         )
 
 
@@ -83,7 +81,7 @@ def check_memory(question: str) -> dict | None:
             meta = results["metadatas"][0][0]
             cached_question = results["documents"][0][0]
 
-            print(f"✅ Memory HIT — reusing cached result")
+            print("✅ Memory HIT — reusing cached result")
             print(f"   Original question: {cached_question}")
             print(f"   Similarity: {similarity:.3f}")
 
@@ -119,9 +117,7 @@ def save_to_memory(
     try:
         collection = _get_or_create_collection()
 
-        q_hash = hashlib.md5(
-            question.lower().strip().encode()
-        ).hexdigest()
+        q_hash = hashlib.md5(question.lower().strip().encode()).hexdigest()
 
         try:
             collection.delete(ids=[q_hash])
@@ -130,13 +126,15 @@ def save_to_memory(
 
         collection.add(
             documents=[question],
-            metadatas=[{
-                "sql_query": sql_query,
-                "insight": insight,
-                "summary": summary,
-                "row_count": row_count,
-                "cached_at": datetime.now().isoformat(),
-            }],
+            metadatas=[
+                {
+                    "sql_query": sql_query,
+                    "insight": insight,
+                    "summary": summary,
+                    "row_count": row_count,
+                    "cached_at": datetime.now().isoformat(),
+                }
+            ],
             ids=[q_hash],
         )
 

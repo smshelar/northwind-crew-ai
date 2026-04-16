@@ -5,8 +5,6 @@ Full pipeline with RAG schema retrieval, memory cache,
 SQL evaluation and hallucination detection.
 """
 
-
-
 import json
 import re
 import sqlite3
@@ -29,7 +27,6 @@ from utils.llm_factory import get_current_model_name
 from rag.schema_retriever import retrieve_relevant_schema, is_schema_indexed
 from rag.schema_indexer import index_schema
 from rag.memory_store import check_memory, save_to_memory, get_memory_stats
-from evaluation.evaluator import evaluate, is_hallucination, get_evaluation_badge
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "northwind.db")
 
@@ -49,9 +46,10 @@ def _validate_and_fix_sql(sql: str) -> str:
         if not df.empty:
             return sql
         sql_no_where = re.sub(
-            r'WHERE\s+.*?(GROUP BY|ORDER BY|LIMIT|$)',
-            r'\1', sql,
-            flags=re.IGNORECASE | re.DOTALL
+            r"WHERE\s+.*?(GROUP BY|ORDER BY|LIMIT|$)",
+            r"\1",
+            sql,
+            flags=re.IGNORECASE | re.DOTALL,
         ).strip()
         df2 = _run_sql(sql_no_where)
         if not df2.empty:
@@ -81,63 +79,83 @@ def _build_chart(df: pd.DataFrame, viz: dict) -> plt.Figure | None:
         if len(df) > 10:
             df = df.head(10)
 
-        plt.rcParams.update({
-            "figure.facecolor": "#0f1117",
-            "axes.facecolor":   "#0f1117",
-            "axes.edgecolor":   "#2a2d3a",
-            "axes.labelcolor":  "#ffffff",
-            "xtick.color":      "#ffffff",
-            "ytick.color":      "#ffffff",
-            "text.color":       "#ffffff",
-            "grid.color":       "#2a2d3a",
-            "grid.linestyle":   "--",
-            "grid.alpha":       0.5,
-        })
+        plt.rcParams.update(
+            {
+                "figure.facecolor": "#0f1117",
+                "axes.facecolor": "#0f1117",
+                "axes.edgecolor": "#2a2d3a",
+                "axes.labelcolor": "#ffffff",
+                "xtick.color": "#ffffff",
+                "ytick.color": "#ffffff",
+                "text.color": "#ffffff",
+                "grid.color": "#2a2d3a",
+                "grid.linestyle": "--",
+                "grid.alpha": 0.5,
+            }
+        )
 
         fig, ax = plt.subplots(figsize=(10, 5))
         fig.patch.set_facecolor("#0f1117")
-        colors = plt.cm.Blues(
-            [0.4 + 0.6 * (1 - i / len(df)) for i in range(len(df))]
-        )
+        colors = plt.cm.Blues([0.4 + 0.6 * (1 - i / len(df)) for i in range(len(df))])
 
         if chart_type == "bar":
-            bars = ax.bar(df[x].astype(str), df[y],
-                         color=colors, edgecolor="none", width=0.6)
+            bars = ax.bar(
+                df[x].astype(str), df[y], color=colors, edgecolor="none", width=0.6
+            )
             for bar in bars:
                 height = bar.get_height()
                 ax.text(
                     bar.get_x() + bar.get_width() / 2,
                     height + max(df[y]) * 0.01,
                     f"{int(height):,}",
-                    ha="center", va="bottom", fontsize=9, color="#ffffff"
+                    ha="center",
+                    va="bottom",
+                    fontsize=9,
+                    color="#ffffff",
                 )
             ax.set_xticks(range(len(df)))
-            ax.set_xticklabels(df[x].astype(str), rotation=30,
-                               ha="right", fontsize=10)
+            ax.set_xticklabels(df[x].astype(str), rotation=30, ha="right", fontsize=10)
         elif chart_type == "line":
-            ax.plot(df[x].astype(str), df[y], marker="o", color="#4CAF50",
-                    linewidth=2.5, markersize=7, markerfacecolor="#ffffff")
+            ax.plot(
+                df[x].astype(str),
+                df[y],
+                marker="o",
+                color="#4CAF50",
+                linewidth=2.5,
+                markersize=7,
+                markerfacecolor="#ffffff",
+            )
             ax.set_xticks(range(len(df)))
-            ax.set_xticklabels(df[x].astype(str), rotation=30,
-                               ha="right", fontsize=10)
+            ax.set_xticklabels(df[x].astype(str), rotation=30, ha="right", fontsize=10)
             ax.fill_between(range(len(df)), df[y], alpha=0.1, color="#4CAF50")
         elif chart_type == "pie":
             wedge_colors = plt.cm.Blues(
                 [0.3 + 0.7 * i / len(df) for i in range(len(df))]
             )
-            ax.pie(df[y], labels=df[x].astype(str), autopct="%1.1f%%",
-                   colors=wedge_colors, startangle=140, pctdistance=0.85,
-                   wedgeprops={"edgecolor": "#0f1117", "linewidth": 2})
+            ax.pie(
+                df[y],
+                labels=df[x].astype(str),
+                autopct="%1.1f%%",
+                colors=wedge_colors,
+                startangle=140,
+                pctdistance=0.85,
+                wedgeprops={"edgecolor": "#0f1117", "linewidth": 2},
+            )
         elif chart_type == "scatter":
-            ax.scatter(df[x], df[y], color="#4CAF50", s=100,
-                      alpha=0.8, edgecolors="white", linewidth=0.5)
+            ax.scatter(
+                df[x],
+                df[y],
+                color="#4CAF50",
+                s=100,
+                alpha=0.8,
+                edgecolors="white",
+                linewidth=0.5,
+            )
         else:
             ax.bar(df[x].astype(str), df[y], color=colors, edgecolor="none")
-            ax.set_xticklabels(df[x].astype(str), rotation=30,
-                               ha="right", fontsize=10)
+            ax.set_xticklabels(df[x].astype(str), rotation=30, ha="right", fontsize=10)
 
-        ax.set_title(title, fontsize=14, fontweight="bold",
-                    color="#ffffff", pad=15)
+        ax.set_title(title, fontsize=14, fontweight="bold", color="#ffffff", pad=15)
         ax.yaxis.grid(True)
         ax.set_axisbelow(True)
         ax.spines["top"].set_visible(False)
@@ -201,8 +219,11 @@ class NorthwindCrew:
                 "success": False,
                 "error": f"Your question was blocked: {input_check.reason}",
                 "steps": ["❌ Input blocked by guardrail"],
-                "sql_query": "", "dataframe": None,
-                "figure": None, "insight": "", "summary": "",
+                "sql_query": "",
+                "dataframe": None,
+                "figure": None,
+                "insight": "",
+                "summary": "",
             }
         user_question = input_check.safe_question
 
@@ -215,16 +236,12 @@ class NorthwindCrew:
                 f"✅ Memory HIT — reusing cached result "
                 f"(similarity: {memory_hit['similarity']:.0%})"
             )
-            steps.append(
-                f"   Original question: {memory_hit['original_question']}"
-            )
+            steps.append(f"   Original question: {memory_hit['original_question']}")
             # Re-run SQL to get fresh dataframe
             try:
                 df = _run_sql(memory_hit["sql_query"])
                 data_sample = df.head(10).to_json(orient="records")
-                visualize_task = create_visualizer_task(
-                    user_question, data_sample
-                )
+                visualize_task = create_visualizer_task(user_question, data_sample)
                 viz_crew = Crew(
                     agents=[visualize_task.agent],
                     tasks=[visualize_task],
@@ -282,17 +299,23 @@ class NorthwindCrew:
         try:
             sql_result = _kickoff_with_retry(sql_crew)
             sql_query = _extract_task_raw(sql_result)
-            sql_query = re.sub(
-                r"```(?:sql)?", "", sql_query
-            ).strip().rstrip("`").strip()
+            sql_query = (
+                re.sub(r"```(?:sql)?", "", sql_query).strip().rstrip("`").strip()
+            )
             steps.append(f"✅ SQL written: `{sql_query[:80]}...`")
         except Exception as e:
             steps.append(f"❌ SQL writing failed: {e}")
             return {
-                "success": False, "error": str(e), "steps": steps,
-                "sql_query": "", "dataframe": None, "figure": None,
-                "insight": "", "summary": "",
-                "evaluation_score": 0, "evaluation_badge": "🔴 Failed",
+                "success": False,
+                "error": str(e),
+                "steps": steps,
+                "sql_query": "",
+                "dataframe": None,
+                "figure": None,
+                "insight": "",
+                "summary": "",
+                "evaluation_score": 0,
+                "evaluation_badge": "🔴 Failed",
             }
 
         # ── Step 4: Execute SQL directly ──────────────────────
@@ -311,10 +334,13 @@ class NorthwindCrew:
                 return {
                     "success": False,
                     "error": "Query returned no results. "
-                             "Northwind data covers 1996–1998 only.",
-                    "steps": steps, "sql_query": sql_query,
-                    "dataframe": None, "figure": None,
-                    "insight": "", "summary": "",
+                    "Northwind data covers 1996–1998 only.",
+                    "steps": steps,
+                    "sql_query": sql_query,
+                    "dataframe": None,
+                    "figure": None,
+                    "insight": "",
+                    "summary": "",
                     "evaluation_score": 0,
                     "evaluation_badge": "🔴 No Results",
                 }
@@ -325,9 +351,12 @@ class NorthwindCrew:
             return {
                 "success": False,
                 "error": f"SQL execution failed: {e}",
-                "steps": steps, "sql_query": sql_query,
-                "dataframe": None, "figure": None,
-                "insight": "", "summary": "",
+                "steps": steps,
+                "sql_query": sql_query,
+                "dataframe": None,
+                "figure": None,
+                "insight": "",
+                "summary": "",
                 "evaluation_score": 0,
                 "evaluation_badge": "🔴 SQL Error",
             }
@@ -342,7 +371,7 @@ class NorthwindCrew:
             sql_query=sql_query,
             dataframe=df,
             insight="",
-            retrieved_tables=retrieved_tables if 'retrieved_tables' in dir() else [],
+            retrieved_tables=retrieved_tables if "retrieved_tables" in dir() else [],
             execution_time_ms=exec_time_ms,
             model_name=model_name,
         )
@@ -361,14 +390,19 @@ class NorthwindCrew:
                 "success": False,
                 "error": "Result did not pass quality checks. Please rephrase.",
                 "steps": steps + [f"❌ Output blocked: {output_check.reason}"],
-                "sql_query": sql_query, "dataframe": df,
-                "figure": None, "insight": "", "summary": "",
+                "sql_query": sql_query,
+                "dataframe": df,
+                "figure": None,
+                "insight": "",
+                "summary": "",
                 "evaluation_score": eval_summary["quality_score"],
                 "evaluation_badge": "🔴 Blocked",
             }
 
-        steps.append(f"✅ Evaluation passed — score: {eval_summary['quality_score']}/100")
-        
+        steps.append(
+            f"✅ Evaluation passed — score: {eval_summary['quality_score']}/100"
+        )
+
         # ── Step 7: Visualizer Agent ──────────────────────────
         data_sample = df.head(10).to_json(orient="records")
         visualize_task = create_visualizer_task(user_question, data_sample)
@@ -383,9 +417,7 @@ class NorthwindCrew:
             viz_result = _kickoff_with_retry(viz_crew)
             viz_raw = _extract_task_raw(viz_result)
             viz = _extract_json(viz_raw)
-            steps.append(
-                f"✅ Visualization config: {viz.get('chart_type')} chart"
-            )
+            steps.append(f"✅ Visualization config: {viz.get('chart_type')} chart")
         except Exception as e:
             viz = {}
             steps.append(f"⚠️  Visualizer failed: {e}")
@@ -396,9 +428,9 @@ class NorthwindCrew:
 
         summary = f"Found {len(df)} records. {viz.get('insight', '')}"
 
-        print(f"\n🎯 INSIGHT FAITHFULNESS CHECK")
+        print("\n🎯 INSIGHT FAITHFULNESS CHECK")
         print(f"   Insight: {viz.get('insight', '')[:80]}")
-        print(f"   This was evaluated after visualization completed")
+        print("   This was evaluated after visualization completed")
 
         # ── Step 8: Save to Memory (only if evaluation passed) ─
         save_to_memory(

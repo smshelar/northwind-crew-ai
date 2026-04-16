@@ -70,14 +70,16 @@ def validate_output(
 
     # Remove any SQL that might have leaked into insight
     safe_insight = re.sub(
-        r'(SELECT|FROM|WHERE|JOIN|DROP|DELETE|INSERT)',
-        '', safe_insight, flags=re.IGNORECASE
+        r"(SELECT|FROM|WHERE|JOIN|DROP|DELETE|INSERT)",
+        "",
+        safe_insight,
+        flags=re.IGNORECASE,
     ).strip()
 
     # Remove excessive punctuation/symbols
-    safe_insight = re.sub(r'[^\w\s\.,!?%$£€\-\(\)]', '', safe_insight)
+    safe_insight = re.sub(r"[^\w\s\.,!?%$£€\-\(\)]", "", safe_insight)
 
-    print(f"  ✅ Insight sanitised")
+    print("  ✅ Insight sanitised")
     print(f"{'=' * 65}\n")
 
     return OutputGuardrailResult(

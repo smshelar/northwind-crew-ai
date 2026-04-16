@@ -7,8 +7,8 @@ table schemas from ChromaDB using vector similarity.
 
 import os
 import sys
-import json
 import sqlite3
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import chromadb
@@ -33,8 +33,10 @@ def get_chroma_client():
     os.makedirs(chroma_path, exist_ok=True)
     return chromadb.PersistentClient(path=chroma_path)
 
+
 def get_embedding_function():
     return embedding_functions.DefaultEmbeddingFunction()
+
 
 def retrieve_relevant_schema(question: str, top_k: int = 5) -> str:
     """
@@ -45,10 +47,7 @@ def retrieve_relevant_schema(question: str, top_k: int = 5) -> str:
     try:
         client = get_chroma_client()
         embed_fn = get_embedding_function()
-        collection = client.get_collection(
-            name="schema",
-            embedding_function=embed_fn
-        )
+        collection = client.get_collection(name="schema", embedding_function=embed_fn)
 
         results = collection.query(
             query_texts=[question],
@@ -62,25 +61,19 @@ def retrieve_relevant_schema(question: str, top_k: int = 5) -> str:
         schema_parts = []
         retrieved_tables = []
 
-        for i, (doc, meta) in enumerate(zip(
-            results["documents"][0],
-            results["metadatas"][0]
-        )):
+        for i, (doc, meta) in enumerate(
+            zip(results["documents"][0], results["metadatas"][0])
+        ):
             table_name = meta["table_name"]
-            columns = json.loads(meta["columns"])
             retrieved_tables.append(table_name)
 
             # Get full column details from DB
             conn = sqlite3.connect(DB_PATH)
             cursor = conn.execute(f'PRAGMA table_info("{table_name}")')
-            col_details = [
-                f"{row[1]} {row[2]}" for row in cursor.fetchall()
-            ]
+            col_details = [f"{row[1]} {row[2]}" for row in cursor.fetchall()]
             conn.close()
 
-            schema_parts.append(
-                f"- {table_name}({', '.join(col_details)})"
-            )
+            schema_parts.append(f"- {table_name}({', '.join(col_details)})")
 
         print(f"🔍 RAG retrieved tables: {retrieved_tables}")
 
@@ -95,9 +88,7 @@ def retrieve_relevant_schema(question: str, top_k: int = 5) -> str:
 def _get_full_schema_fallback() -> tuple:
     """Fallback: return all tables if RAG fails."""
     conn = sqlite3.connect(DB_PATH)
-    cursor = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table'"
-    )
+    cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
     tables = [row[0] for row in cursor.fetchall()]
 
     schema_parts = []

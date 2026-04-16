@@ -15,6 +15,7 @@ import os
 import sys
 import re
 import sqlite3
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
@@ -25,8 +26,8 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "northwind.db")
 class EvaluationResult:
     def __init__(self):
         self.passed = True
-        self.score = 100        # 0-100
-        self.checks = []        # list of (check_name, passed, message)
+        self.score = 100  # 0-100
+        self.checks = []  # list of (check_name, passed, message)
         self.warnings = []
         self.errors = []
 
@@ -61,11 +62,7 @@ def evaluate(
 
     # ── Check 1: SQL is not empty ─────────────────────────────
     if not sql_query or len(sql_query.strip()) < 10:
-        result.add_check(
-            "SQL not empty",
-            False,
-            "SQL query is empty or too short"
-        )
+        result.add_check("SQL not empty", False, "SQL query is empty or too short")
         conn.close()
         return result
     else:
@@ -74,26 +71,26 @@ def evaluate(
     # ── Check 2: Only SELECT (no data modification) ───────────
     sql_upper = sql_query.upper().strip()
     dangerous = ["DROP", "DELETE", "INSERT", "UPDATE", "ALTER", "TRUNCATE"]
-    has_dangerous = any(sql_upper.startswith(kw) or f" {kw} " in sql_upper
-                       for kw in dangerous)
+    has_dangerous = any(
+        sql_upper.startswith(kw) or f" {kw} " in sql_upper for kw in dangerous
+    )
     result.add_check(
         "Safe SQL",
         not has_dangerous,
-        "No dangerous SQL operations" if not has_dangerous
-        else "⚠️ Dangerous SQL operation detected"
+        (
+            "No dangerous SQL operations"
+            if not has_dangerous
+            else "⚠️ Dangerous SQL operation detected"
+        ),
     )
 
     # ── Check 3: Tables exist in database ────────────────────
-    cursor = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table'"
-    )
+    cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
     real_tables = {row[0].lower() for row in cursor.fetchall()}
 
     # Extract table names from SQL (simple regex)
     table_matches = re.findall(
-        r'(?:FROM|JOIN)\s+[\[\`"]?([^\s\[\]`,;]+)[\]\`"]?',
-        sql_query,
-        re.IGNORECASE
+        r'(?:FROM|JOIN)\s+[\[\`"]?([^\s\[\]`,;]+)[\]\`"]?', sql_query, re.IGNORECASE
     )
     hallucinated_tables = []
     for t in table_matches:
@@ -103,9 +100,7 @@ def evaluate(
 
     if hallucinated_tables:
         result.add_check(
-            "Tables exist",
-            False,
-            f"Hallucinated tables: {hallucinated_tables}"
+            "Tables exist", False, f"Hallucinated tables: {hallucinated_tables}"
         )
     else:
         result.add_check("Tables exist", True, "All tables exist in DB")
@@ -115,33 +110,20 @@ def evaluate(
         result.add_check(
             "Returns data",
             False,
-            "Query returned 0 rows — possible wrong filters or hallucination"
+            "Query returned 0 rows — possible wrong filters or hallucination",
         )
     else:
-        result.add_check(
-            "Returns data",
-            True,
-            f"Query returned {len(dataframe)} rows"
-        )
+        result.add_check("Returns data", True, f"Query returned {len(dataframe)} rows")
 
     # ── Check 5: No NaN-only columns ─────────────────────────
     if dataframe is not None and not dataframe.empty:
-        nan_cols = [
-            col for col in dataframe.columns
-            if dataframe[col].isna().all()
-        ]
+        nan_cols = [col for col in dataframe.columns if dataframe[col].isna().all()]
         if nan_cols:
             result.add_check(
-                "No empty columns",
-                False,
-                f"Columns with all NaN values: {nan_cols}"
+                "No empty columns", False, f"Columns with all NaN values: {nan_cols}"
             )
         else:
-            result.add_check(
-                "No empty columns",
-                True,
-                "All columns have data"
-            )
+            result.add_check("No empty columns", True, "All columns have data")
 
     # ── Check 6: Numeric sanity check ────────────────────────
     if dataframe is not None and not dataframe.empty:
@@ -149,20 +131,18 @@ def evaluate(
         for col in numeric_cols:
             if (dataframe[col] < 0).any():
                 # Negative sales/counts are suspicious
-                if any(kw in col.lower() for kw in
-                       ["sales", "revenue", "count", "quantity", "freq"]):
+                if any(
+                    kw in col.lower()
+                    for kw in ["sales", "revenue", "count", "quantity", "freq"]
+                ):
                     result.add_check(
                         f"Numeric sanity ({col})",
                         False,
-                        f"Column '{col}' has negative values — possible hallucination"
+                        f"Column '{col}' has negative values — possible hallucination",
                     )
                     break
         else:
-            result.add_check(
-                "Numeric sanity",
-                True,
-                "Numeric values look reasonable"
-            )
+            result.add_check("Numeric sanity", True, "Numeric values look reasonable")
 
     # ── Check 7: Result relevance to question ────────────────
     question_lower = user_question.lower()
@@ -190,9 +170,11 @@ def evaluate(
         result.add_check(
             "Result relevance",
             relevant,
-            "Result columns are relevant to the question"
-            if relevant else
-            "Result columns may not match the question"
+            (
+                "Result columns are relevant to the question"
+                if relevant
+                else "Result columns may not match the question"
+            ),
         )
 
     conn.close()

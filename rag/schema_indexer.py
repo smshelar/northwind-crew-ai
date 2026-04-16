@@ -10,6 +10,7 @@ import os
 import sys
 import sqlite3
 import json
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import chromadb
@@ -23,21 +24,22 @@ DEFAULT_CHROMA_PATH = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 #     Use in-memory/temp DB for Streamlit.
 #     Use persistent DB locally.
 #     """
-    # try:
-    #     import streamlit as st
-    #     # If running in Streamlit Cloud
-    #     if hasattr(st, "runtime"):
-    #         return chromadb.Client(
-    #             Settings(
-    #                 persist_directory=tempfile.mkdtemp(),
-    #                 anonymized_telemetry=False
-    #             )
-    #         )
-    # except:
-    #     pass
+# try:
+#     import streamlit as st
+#     # If running in Streamlit Cloud
+#     if hasattr(st, "runtime"):
+#         return chromadb.Client(
+#             Settings(
+#                 persist_directory=tempfile.mkdtemp(),
+#                 anonymized_telemetry=False
+#             )
+#         )
+# except:
+#     pass
 
-    # # Local fallback
-    # return chromadb.PersistentClient(path=CHROMA_PATH)
+# # Local fallback
+# return chromadb.PersistentClient(path=CHROMA_PATH)
+
 
 def get_chroma_path() -> str:
     """
@@ -62,6 +64,7 @@ def get_chroma_client():
 
 def get_embedding_function():
     return embedding_functions.DefaultEmbeddingFunction()
+
 
 def get_all_tables(conn) -> list[str]:
     cursor = conn.execute(
@@ -107,9 +110,7 @@ def build_schema_document(schema: dict) -> str:
     More detail = better retrieval accuracy.
     """
     table = schema["table_name"]
-    cols = ", ".join(
-        f"{c['name']} ({c['type']})" for c in schema["columns"]
-    )
+    cols = ", ".join(f"{c['name']} ({c['type']})" for c in schema["columns"])
     col_names = [c["name"] for c in schema["columns"]]
 
     # Build sample values string
@@ -168,7 +169,7 @@ def index_schema():
         collection = client.create_collection(
             name="schema",
             embedding_function=embed_fn,
-            metadata={"description": "Database table schemas"}
+            metadata={"description": "Database table schemas"},
         )
 
     print("📝 Indexing tables...")
@@ -183,14 +184,18 @@ def index_schema():
 
         doc = build_schema_document(schema)
         documents.append(doc)
-        metadatas.append({
-            "table_name": table,
-            "columns": json.dumps([c["name"] for c in schema["columns"]]),
-            "row_count": schema["row_count"],
-        })
+        metadatas.append(
+            {
+                "table_name": table,
+                "columns": json.dumps([c["name"] for c in schema["columns"]]),
+                "row_count": schema["row_count"],
+            }
+        )
         ids.append(f"table_{table.replace(' ', '_')}")
-        print(f"   ✅ Indexed: {table} ({schema['row_count']} rows, "
-              f"{len(schema['columns'])} columns)")
+        print(
+            f"   ✅ Indexed: {table} ({schema['row_count']} rows, "
+            f"{len(schema['columns'])} columns)"
+        )
 
     collection.add(
         documents=documents,
