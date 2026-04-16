@@ -58,9 +58,11 @@ st.caption("Query your Northwind database using plain English")
 
 col_input, col_btn = st.columns([5, 1])
 with col_input:
+    if "user_query" not in st.session_state:
+        st.session_state["user_query"] = ""
+
     user_query = st.text_input(
         "",
-        value=st.session_state.get("user_query", ""),
         placeholder="e.g., What were the top 5 products by sales?",
         key="user_query",
         label_visibility="collapsed",
