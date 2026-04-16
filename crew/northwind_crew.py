@@ -166,6 +166,19 @@ def _kickoff_with_retry(crew, max_retries: int = 5):
     raise Exception("Max retries reached due to rate limiting.")
 
 
+def _extract_task_raw(result) -> str:
+    """
+    Normalize CrewAI kickoff outputs across versions.
+    Older CrewAI returns a plain string, while newer versions expose
+    `tasks_output[0].raw`.
+    """
+    if hasattr(result, "tasks_output") and result.tasks_output:
+        return result.tasks_output[0].raw.strip()
+    if isinstance(result, str):
+        return result.strip()
+    return str(result).strip()
+
+
 class NorthwindCrew:
 
     def __init__(self):
@@ -219,7 +232,7 @@ class NorthwindCrew:
                     verbose=False,
                 )
                 viz_result = _kickoff_with_retry(viz_crew)
-                viz_raw = viz_result.tasks_output[0].raw.strip()
+                viz_raw = _extract_task_raw(viz_result)
                 try:
                     viz = _extract_json(viz_raw)
                 except Exception:
@@ -268,7 +281,7 @@ class NorthwindCrew:
 
         try:
             sql_result = _kickoff_with_retry(sql_crew)
-            sql_query = sql_result.tasks_output[0].raw.strip()
+            sql_query = _extract_task_raw(sql_result)
             sql_query = re.sub(
                 r"```(?:sql)?", "", sql_query
             ).strip().rstrip("`").strip()
@@ -368,7 +381,7 @@ class NorthwindCrew:
 
         try:
             viz_result = _kickoff_with_retry(viz_crew)
-            viz_raw = viz_result.tasks_output[0].raw.strip()
+            viz_raw = _extract_task_raw(viz_result)
             viz = _extract_json(viz_raw)
             steps.append(
                 f"✅ Visualization config: {viz.get('chart_type')} chart"

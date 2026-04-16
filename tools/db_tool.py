@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from crewai.tools import BaseTool
+from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 import sqlite3
 import pandas as pd

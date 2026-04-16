@@ -108,6 +108,10 @@ Builds an LLM object compatible with both older CrewAI releases
 """
 
 import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 
 def _load_provider_and_secrets():
