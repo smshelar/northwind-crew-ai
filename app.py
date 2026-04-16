@@ -7,36 +7,26 @@ Run with:
     streamlit run app.py
 """
 
-import sys
-import os
-
-
-# Ensure project root is in path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import streamlit as st
 
 # Import DB setup function
+from crew.northwind_crew import NorthwindCrew
 from northwind_db.db_manager import download_db
+
 # Auto-download database if missing
 download_db()
 
-
-# Streamlit + Orchestrator
-import streamlit as st
-from crew.northwind_crew import NorthwindCrew
-
 # ---------------- Page config ---------------- #
-st.set_page_config(
-    page_title="Northwind Agentic AI",
-    layout="wide"
-)
+st.set_page_config(page_title="Northwind Agentic AI", layout="wide")
+
 
 # load CSS
 def load_css(file_path):
     with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-load_css("assets/styles.css")
 
+load_css("assets/styles.css")
 
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
@@ -58,9 +48,11 @@ st.caption("Query your Northwind database using plain English")
 
 col_input, col_btn = st.columns([5, 1])
 with col_input:
+    if "user_query" not in st.session_state:
+        st.session_state["user_query"] = ""
+
     user_query = st.text_input(
         "",
-        value=st.session_state.get("user_query", ""),
         placeholder="e.g., What were the top 5 products by sales?",
         key="user_query",
         label_visibility="collapsed",
@@ -80,14 +72,19 @@ if run and user_query.strip():
             st.markdown(f"- {step}")
 
     if not result["success"]:
-        if "no results" in str(result["error"]).lower() or "no data" in str(result["error"]).lower():
-            st.warning("🔍 No data found. Note: The Northwind database only contains data from **1996, 1997, and 1998**.")
+        if (
+            "no results" in str(result["error"]).lower()
+            or "no data" in str(result["error"]).lower()
+        ):
+            st.warning(
+                "🔍 No data found. Note: The Northwind database only contains data from **1996, 1997, and 1998**."
+            )
         else:
             st.warning("😕 Something went wrong. Try rephrasing.")
         with st.expander("Technical details"):
             st.code(result["error"])
         st.stop()
-        
+
     if result["sql_query"]:
         with st.expander("Generated SQL", expanded=True):
             st.code(result["sql_query"], language="sql")

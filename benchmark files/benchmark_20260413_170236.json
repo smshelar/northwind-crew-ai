@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-04-13T17:02:36.415835",
+  "questions": [
+    "What were the top 5 products by total sales?",
+    "Which customers have the highest order frequency?"
+  ],
+  "models": [
+    "Groq Llama 3.1 8b",
+    "Mistral 7b",
+    "Cohere Command R"
+  ],
+  "results": [
+    {
+      "model": "Groq Llama 3.1 8b",
+      "question": "What were the top 5 products by total sales?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "Error code: 401 - {'error': {'message': 'Incorrect API key provided: GxCBXXYE***********************"
+    },
+    {
+      "model": "Mistral 7b",
+      "question": "What were the top 5 products by total sales?",
+      "sql": "SELECT p.ProductName, SUM(od.Quantity * od.UnitPrice * (1 - od.Discount)) AS TotalSales\nFROM [Order Details] od\nJOIN Products p ON od.ProductID = p.ProductID\nGROUP BY p.ProductID, p.ProductName\nORDER BY TotalSales DESC\nLIMIT 5;",
+      "success": true,
+      "rows": 5,
+      "time_ms": 1075.382947921753,
+      "hallucinated_tables": [
+        "Order"
+      ],
+      "quality_score": 80,
+      "error": ""
+    },
+    {
+      "model": "Cohere Command R",
+      "question": "What were the top 5 products by total sales?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "Error code: 401 - {'error': {'message': 'Incorrect API key provided: GxCBXXYE***********************"
+    },
+    {
+      "model": "Groq Llama 3.1 8b",
+      "question": "Which customers have the highest order frequency?",
+      "sql": "SELECT c.CustomerID, c.CompanyName, COUNT(o.OrderID) AS OrderFrequency\nFROM Customers c\nJOIN Orders o ON c.CustomerID = o.CustomerID\nGROUP BY c.CustomerID, c.CompanyName\nORDER BY OrderFrequency DESC LIMIT 1;",
+      "success": true,
+      "rows": 1,
+      "time_ms": 424.61681365966797,
+      "hallucinated_tables": [],
+      "quality_score": 100,
+      "error": ""
+    },
+    {
+      "model": "Mistral 7b",
+      "question": "Which customers have the highest order frequency?",
+      "sql": "SELECT c.CustomerID, c.CompanyName, COUNT(o.OrderID) AS OrderFrequency\nFROM Customers c\nJOIN Orders o ON c.CustomerID = o.CustomerID\nGROUP BY c.CustomerID, c.CompanyName\nORDER BY OrderFrequency DESC;",
+      "success": true,
+      "rows": 93,
+      "time_ms": 854.5191287994385,
+      "hallucinated_tables": [],
+      "quality_score": 100,
+      "error": ""
+    },
+    {
+      "model": "Cohere Command R",
+      "question": "Which customers have the highest order frequency?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "Error code: 401 - {'error': {'message': 'Incorrect API key provided: GxCBXXYE***********************"
+    }
+  ]
+}

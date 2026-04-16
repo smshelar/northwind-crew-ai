@@ -4,6 +4,7 @@ import os
 url = "https://raw.githubusercontent.com/jpwhite3/northwind-SQLite3/master/dist/northwind.db"
 path = "data/northwind.db"
 
+
 def download_db():
     os.makedirs(os.path.dirname(path), exist_ok=True)
     if not os.path.exists(path):
@@ -18,4 +19,3 @@ def download_db():
             raise Exception("Failed to download DB")
     else:
         print("Northwind database already exists.")
-

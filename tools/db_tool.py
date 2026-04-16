@@ -1,8 +1,9 @@
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from crewai.tools import BaseTool
+from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 import sqlite3
 import pandas as pd
@@ -10,8 +11,10 @@ import json
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "northwind.db")
 
+
 class SQLInput(BaseModel):
     query: str = Field(description="Valid SQLite SQL query to execute")
+
 
 class ExecuteSQLTool(BaseTool):
     name: str = "execute_sql"

@@ -1,9 +1,11 @@
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from crewai import Task
 from agents.visualizer import create_visualizer
+
 
 def create_visualizer_task(user_question: str, data_sample: str = "") -> Task:
     return Task(
@@ -18,7 +20,7 @@ def create_visualizer_task(user_question: str, data_sample: str = "") -> Task:
             '"insight": "QUICK-Stop leads with 28 orders."}'
         ),
         expected_output=(
-            'A JSON object only — no markdown, no extra text.\n'
+            "A JSON object only — no markdown, no extra text.\n"
             'Format: {"chart_type": "bar", "x_column": "...", '
             '"y_column": "...", "title": "...", "insight": "..."}'
         ),

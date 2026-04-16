@@ -1,10 +1,12 @@
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from crewai import Agent
 from tools.db_tool import ExecuteSQLTool
 from utils.llm_factory import get_llm
+
 
 def create_executer() -> Agent:
     return Agent(
@@ -22,7 +24,8 @@ def create_executer() -> Agent:
             "If you return anything other than a JSON array, you have failed."
         ),
         tools=[ExecuteSQLTool()],
-        llm=get_llm(temperature=0.0),
+        # `get_llm()` returns a CrewAI-compatible LLM object for local and deploy.
+        llm=get_llm(),
         verbose=True,
         allow_delegation=False,
         max_iter=3,  # forces it to stop after 3 attempts

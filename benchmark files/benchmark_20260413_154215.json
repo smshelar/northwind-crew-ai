@@ -1,0 +1,134 @@
+{
+  "timestamp": "2026-04-13T15:42:15.184672",
+  "questions": [
+    "What were the top 5 products by total sales?",
+    "Which customers have the highest order frequency?",
+    "What is the total revenue per year?",
+    "Which employee handled the most orders?",
+    "Which product category generates the most revenue?"
+  ],
+  "models": [
+    "Gemini 2.0 Flash Lite",
+    "Groq Llama 3.1 8b"
+  ],
+  "results": [
+    {
+      "model": "Gemini 2.0 Flash Lite",
+      "question": "What were the top 5 products by total sales?",
+      "sql": "SELECT p.ProductName, SUM(od.Quantity * od.UnitPrice * (1 - od.Discount)) AS TotalSales\nFROM [Order Details] od\nJOIN Orders o ON od.OrderID = o.OrderID\nJOIN Products p ON od.ProductID = p.ProductID\nGROUP BY p.ProductName\nORDER BY TotalSales DESC\nLIMIT 5;",
+      "success": true,
+      "rows": 5,
+      "time_ms": 422.60098457336426,
+      "hallucinated_tables": [
+        "Order"
+      ],
+      "quality_score": 80,
+      "error": ""
+    },
+    {
+      "model": "Groq Llama 3.1 8b",
+      "question": "What were the top 5 products by total sales?",
+      "sql": "SELECT p.ProductName, SUM(od.Quantity * od.UnitPrice * (1 - od.Discount)) AS TotalSales\nFROM [Order Details] od\nJOIN Orders o ON od.OrderID = o.OrderID\nJOIN Products p ON od.ProductID = p.ProductID\nGROUP BY p.ProductName\nORDER BY TotalSales DESC\nLIMIT 5;",
+      "success": true,
+      "rows": 5,
+      "time_ms": 339.89691734313965,
+      "hallucinated_tables": [
+        "Order"
+      ],
+      "quality_score": 80,
+      "error": ""
+    },
+    {
+      "model": "Gemini 2.0 Flash Lite",
+      "question": "Which customers have the highest order frequency?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please "
+    },
+    {
+      "model": "Groq Llama 3.1 8b",
+      "question": "Which customers have the highest order frequency?",
+      "sql": "SELECT c.CustomerID, c.CompanyName, COUNT(o.OrderID) AS OrderFrequency\nFROM Customers c\nJOIN Orders o ON c.CustomerID = o.CustomerID\nGROUP BY c.CustomerID, c.CompanyName\nORDER BY OrderFrequency DESC LIMIT 1;",
+      "success": true,
+      "rows": 1,
+      "time_ms": 1092.8778648376465,
+      "hallucinated_tables": [],
+      "quality_score": 100,
+      "error": ""
+    },
+    {
+      "model": "Gemini 2.0 Flash Lite",
+      "question": "What is the total revenue per year?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please "
+    },
+    {
+      "model": "Groq Llama 3.1 8b",
+      "question": "What is the total revenue per year?",
+      "sql": "SELECT \n    strftime('%Y', o.OrderDate) AS OrderYear, \n    SUM(od.Quantity * od.UnitPrice * (1 - od.Discount)) AS TotalRevenue\nFROM \n    Orders o\nJOIN \n    [Order Details] od ON o.OrderID = od.OrderID\nGROUP BY \n    strftime('%Y', o.OrderDate)",
+      "success": true,
+      "rows": 12,
+      "time_ms": 476.1319160461426,
+      "hallucinated_tables": [
+        "Order"
+      ],
+      "quality_score": 80,
+      "error": ""
+    },
+    {
+      "model": "Gemini 2.0 Flash Lite",
+      "question": "Which employee handled the most orders?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please "
+    },
+    {
+      "model": "Groq Llama 3.1 8b",
+      "question": "Which employee handled the most orders?",
+      "sql": "SELECT e.FirstName, e.LastName, COUNT(o.OrderID) AS TotalOrders\nFROM Employees e\nJOIN Orders o ON e.EmployeeID = o.EmployeeID\nGROUP BY e.FirstName, e.LastName\nORDER BY TotalOrders DESC\nLIMIT 1;",
+      "success": true,
+      "rows": 1,
+      "time_ms": 1035.5570316314697,
+      "hallucinated_tables": [],
+      "quality_score": 100,
+      "error": ""
+    },
+    {
+      "model": "Gemini 2.0 Flash Lite",
+      "question": "Which product category generates the most revenue?",
+      "sql": "",
+      "success": false,
+      "rows": 0,
+      "time_ms": 0.0,
+      "hallucinated_tables": [],
+      "quality_score": 0,
+      "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please "
+    },
+    {
+      "model": "Groq Llama 3.1 8b",
+      "question": "Which product category generates the most revenue?",
+      "sql": "SELECT c.CategoryName, SUM(od.Quantity * od.UnitPrice * (1 - od.Discount)) AS TotalRevenue\nFROM [Order Details] od\nJOIN Orders o ON od.OrderID = o.OrderID\nJOIN Products p ON od.ProductID = p.ProductID\nJOIN Categories c ON p.CategoryID = c.CategoryID\nGROUP BY c.CategoryName\nORDER BY TotalRevenue DESC LIMIT 1;",
+      "success": true,
+      "rows": 1,
+      "time_ms": 426.59687995910645,
+      "hallucinated_tables": [
+        "Order"
+      ],
+      "quality_score": 80,
+      "error": ""
+    }
+  ]
+}
