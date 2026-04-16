@@ -15,12 +15,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import chromadb
 from chromadb.utils import embedding_functions
 
-
-from chromadb.config import Settings
-import tempfile
-
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "northwind.db")
-CHROMA_PATH = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
+DEFAULT_CHROMA_PATH = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 
 # def get_chroma_client():
 #     """
@@ -43,17 +39,25 @@ CHROMA_PATH = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
     # # Local fallback
     # return chromadb.PersistentClient(path=CHROMA_PATH)
 
-def get_chroma_client():
-    import chromadb
-    from chromadb.config import Settings
-    import tempfile
+def get_chroma_path() -> str:
+    """
+    Use an explicit CHROMA_PATH when provided.
+    On Streamlit Cloud, default to /tmp so the cache survives app reruns
+    during the live session. Locally, keep using the repo chroma_db folder.
+    """
+    if os.environ.get("CHROMA_PATH"):
+        return os.environ["CHROMA_PATH"]
 
-    return chromadb.Client(
-        Settings(
-            persist_directory=tempfile.mkdtemp(),  # ✅ valid path
-            anonymized_telemetry=False
-        )
-    )
+    if os.path.exists("/mount/src"):
+        return "/tmp/chroma_db"
+
+    return DEFAULT_CHROMA_PATH
+
+
+def get_chroma_client():
+    chroma_path = get_chroma_path()
+    os.makedirs(chroma_path, exist_ok=True)
+    return chromadb.PersistentClient(path=chroma_path)
 
 
 def get_embedding_function():
@@ -196,7 +200,7 @@ def index_schema():
 
     conn.close()
     print(f"\n✅ Schema index built — {len(documents)} tables indexed")
-    print(f"   Stored at: {CHROMA_PATH}")
+    print(f"   Stored at: {get_chroma_path()}")
     return len(documents)
 
 

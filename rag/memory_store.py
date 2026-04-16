@@ -15,12 +15,24 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import chromadb
 from chromadb.utils import embedding_functions
 
-CHROMA_PATH = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
+DEFAULT_CHROMA_PATH = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
 SIMILARITY_THRESHOLD = 0.85
 
 
+def get_chroma_path() -> str:
+    if os.environ.get("CHROMA_PATH"):
+        return os.environ["CHROMA_PATH"]
+
+    if os.path.exists("/mount/src"):
+        return "/tmp/chroma_db"
+
+    return DEFAULT_CHROMA_PATH
+
+
 def get_client():
-    return chromadb.PersistentClient(path=CHROMA_PATH)
+    chroma_path = get_chroma_path()
+    os.makedirs(chroma_path, exist_ok=True)
+    return chromadb.PersistentClient(path=chroma_path)
 
 
 def get_embed_fn():

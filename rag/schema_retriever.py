@@ -15,11 +15,23 @@ import chromadb
 from chromadb.utils import embedding_functions
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "northwind.db")
-CHROMA_PATH = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
+DEFAULT_CHROMA_PATH = os.path.join(os.path.dirname(__file__), "..", "chroma_db")
+
+
+def get_chroma_path() -> str:
+    if os.environ.get("CHROMA_PATH"):
+        return os.environ["CHROMA_PATH"]
+
+    if os.path.exists("/mount/src"):
+        return "/tmp/chroma_db"
+
+    return DEFAULT_CHROMA_PATH
 
 
 def get_chroma_client():
-    return chromadb.PersistentClient(path=CHROMA_PATH)
+    chroma_path = get_chroma_path()
+    os.makedirs(chroma_path, exist_ok=True)
+    return chromadb.PersistentClient(path=chroma_path)
 
 def get_embedding_function():
     return embedding_functions.DefaultEmbeddingFunction()
