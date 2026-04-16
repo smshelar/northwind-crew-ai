@@ -24,6 +24,7 @@ def create_visualizer() -> Agent:
             '{"chart_type": "bar", "x_column": "ProductName", "y_column": "TotalSales", '
             '"title": "Top Products by Sales", "insight": "..."}'
         ),
+        # `get_llm()` returns a CrewAI-compatible LLM object for local and deploy.
         llm=get_llm(temperature=0.3),
         verbose=True,
         allow_delegation=False,
